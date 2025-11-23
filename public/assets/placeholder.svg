@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(233, 30, 99, 0.08)" stroke-width="0.5"/>
+    </pattern>
+    <linearGradient id="gradBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(233, 30, 99, 0.06);stop-opacity:1" />
+      <stop offset="50%" style="stop-color:rgba(233, 30, 99, 0.04);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(233, 30, 99, 0.06);stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#gradBg)"/>
+  <rect width="800" height="600" fill="url(#grid)"/>
+  <g opacity="0.12" stroke="rgba(233, 30, 99, 0.3)" fill="none" stroke-width="2">
+    <rect x="100" y="80" width="600" height="440" rx="12"/>
+    <circle cx="400" cy="220" r="55"/>
+    <path d="M 150 420 Q 300 300 650 400"/>
+  </g>
+</svg>

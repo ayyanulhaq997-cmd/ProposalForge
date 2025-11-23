@@ -1,0 +1,137 @@
+State Management
+
+Use a step state to track where the user is in the flow:
+
+const [step, setStep] = useState("selectDate"); // "selectDate", "payment", "confirmation"
+const [selectedDates, setSelectedDates] = useState(null);
+const [bookingId, setBookingId] = useState(null);
+
+2. Date Selection Component
+function DatePicker({ onSelect }) {
+  const [dates, setDates] = useState(null);
+
+  const handleSelect = () => {
+    if (!dates) return alert("Select at least one date");
+    onSelect(dates);
+  }
+
+  return (
+    <div>
+      <input type="date" onChange={(e) => setDates(e.target.value)} />
+      <button onClick={handleSelect}>Reserve</button>
+    </div>
+  );
+}
+
+3. Payment Form Component (Stripe)
+
+Install Stripe libraries first:
+
+npm install @stripe/react-stripe-js @stripe/stripe-js
+
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import StripePaymentForm from "./StripePaymentForm";
+
+const stripePromise = loadStripe("your-publishable-key-here");
+
+function PaymentStep({ bookingDetails, onPaymentSuccess }) {
+  return (
+    <Elements stripe={stripePromise}>
+      <StripePaymentForm
+        bookingDetails={bookingDetails}
+        onPaymentSuccess={onPaymentSuccess}
+      />
+    </Elements>
+  );
+}
+
+4. Stripe Payment Form Example
+import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import axios from "axios";
+
+function StripePaymentForm({ bookingDetails, onPaymentSuccess }) {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // 1. Create PaymentIntent on backend
+    const { data } = await axios.post("/api/create-payment-intent", {
+      bookingDetails
+    });
+
+    const clientSecret = data.clientSecret;
+
+    // 2. Confirm payment on frontend
+    const result = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: elements.getElement(CardElement),
+        billing_details: { name: "Customer Name" }
+      }
+    });
+
+    if (result.error) {
+      alert(result.error.message);
+    } else if (result.paymentIntent.status === "succeeded") {
+      // Payment successful
+      onPaymentSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <CardElement />
+      <button type="submit" disabled={!stripe}>Pay Now</button>
+    </form>
+  );
+}
+
+5. Main Booking Component
+function BookingFlow() {
+  const [step, setStep] = useState("selectDate");
+  const [selectedDates, setSelectedDates] = useState(null);
+
+  const handleReserve = (dates) => {
+    setSelectedDates(dates);
+    setStep("payment");
+  };
+
+  const handlePaymentSuccess = () => {
+    setStep("confirmation");
+  };
+
+  return (
+    <div>
+      {step === "selectDate" && (
+        <DatePicker onSelect={handleReserve} />
+      )}
+
+      {step === "payment" && (
+        <PaymentStep
+          bookingDetails={selectedDates}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      {step === "confirmation" && (
+        <div>
+          <h2>Booking Confirmed!</h2>
+          <p>Your stay on {selectedDates} has been successfully booked.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+✅ Flow Summary:
+
+User selects dates → clicks Reserve
+
+Step changes to payment, Stripe form appears
+
+Payment processed via Stripe → success triggers confirmation
+
+Booking confirmed, no backtracking to date selectio
