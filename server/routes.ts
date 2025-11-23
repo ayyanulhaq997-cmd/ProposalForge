@@ -48,7 +48,7 @@ async function seedProperties() {
   }
 }
 
-// Initialize Stripe on startup
+// Initialize Stripe on startup (optional - only if credentials are available)
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -57,6 +57,15 @@ async function initStripe() {
   }
 
   try {
+    // Check if Stripe credentials are available before attempting initialization
+    const hasEnvCredentials = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY;
+    const hasReplitConnector = process.env.REPLIT_CONNECTORS_HOSTNAME && (process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL);
+    
+    if (!hasEnvCredentials && !hasReplitConnector) {
+      console.log('Stripe credentials not found - payments will not be available. To enable, add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY environment variables or use Replit Stripe connector.');
+      return;
+    }
+
     console.log('Initializing Stripe schema...');
     await runMigrations({ databaseUrl });
     console.log('Stripe schema ready');
