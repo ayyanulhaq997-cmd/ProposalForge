@@ -216,6 +216,9 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   attachments: jsonb("attachments").default([]), // Array of {type: 'image'|'document', url: string, name: string}
   isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"), // Timestamp when message was read (for read receipts)
+  editedAt: timestamp("edited_at"), // Timestamp when message was edited
+  isDeleted: boolean("is_deleted").default(false), // Soft delete for message history
   createdAt: timestamp("created_at").defaultNow(),
 });
 
