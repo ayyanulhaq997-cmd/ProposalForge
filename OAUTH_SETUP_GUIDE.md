@@ -73,12 +73,12 @@ Your booking Website has Google and Facebook login buttons on the login page. Wh
 
 | Feature | Status |
 |---------|--------|
-| Email/Password Login | ✅ Working |
-| Google Login Button | ⏳ Ready (waiting for credentials) |
-| Facebook Login Button | ⏳ Ready (waiting for credentials) |
-| Email Signup | ✅ Working |
-| Guest Checkout | ✅ Working |
-| Bookings | ✅ Working |
+| Email/Password Login |  Working |
+| Google Login Button |  Ready (waiting for credentials) |
+| Facebook Login Button |  Ready (waiting for credentials) |
+| Email Signup |  Working |
+| Guest Checkout |  Working |
+| Bookings |  Working |
 
 ---
 
@@ -101,4 +101,4 @@ Your booking Website has Google and Facebook login buttons on the login page. Wh
 - **When OAuth credentials added:** Google/Facebook login will work immediately
 - **Users don't lose anything:** Email/password option always available as fallback
 
-Your client can deploy and go live with email/password right now, and add Google/Facebook login anytime later!
+ client can deploy and go live with email/password right now, and add Google/Facebook login anytime later!
