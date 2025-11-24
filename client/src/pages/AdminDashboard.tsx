@@ -38,8 +38,11 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminDashboard() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { isAuthenticated, isAdmin, isLoading: authLoading } = useAuth();
+  
+  // Determine current view from URL
+  const currentView = location.split('/').pop() || 'dashboard';
   const { data: stats, isLoading } = useQuery<any>({
     queryKey: ['/api/admin/stats'],
   });
@@ -141,6 +144,9 @@ export default function AdminDashboard() {
           </header>
 
           <main className="flex-1 overflow-auto p-6">
+            {/* Show different content based on current view */}
+            {(currentView === 'dashboard' || currentView === 'admin') && (
+              <>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
               <Card>
@@ -261,6 +267,79 @@ export default function AdminDashboard() {
                 )}
               </CardContent>
             </Card>
+              </>
+            )}
+            
+            {/* Other Views */}
+            {currentView === 'properties' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold">Properties Management</h2>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>All Properties</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">Properties list coming soon</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
+            {currentView === 'users' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold">Users Management</h2>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>All Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">Users list coming soon</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
+            {currentView === 'hosts' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold">Hosts Management</h2>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>All Hosts</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">Hosts list coming soon</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
+            {currentView === 'verification' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold">Verification</h2>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pending Verifications</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">Verification requests coming soon</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
+            {currentView === 'settings' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold">Settings</h2>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Admin Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">Settings coming soon</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </main>
         </div>
       </div>

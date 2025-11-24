@@ -65,6 +65,7 @@ function Router() {
 
       {/* Admin routes - accessible if authenticated and admin */}
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/:rest*" component={AdminDashboard} />
       <Route path="/admin/bookings" component={AdminBookings} />
       <Route path="/admin/content" component={AdminContentManager} />
 
