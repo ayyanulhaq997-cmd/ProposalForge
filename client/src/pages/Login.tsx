@@ -20,19 +20,38 @@ export default function Login() {
     lastName: "",
   });
 
+  const hasGoogleAuth = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const hasFacebookAuth = !!import.meta.env.VITE_FACEBOOK_APP_ID;
+
   const handleGoogleLogin = () => {
+    if (!hasGoogleAuth) {
+      toast({ 
+        title: "Not Configured", 
+        description: "Google login is not yet set up. Please use email and password to login.",
+        variant: "destructive" 
+      });
+      return;
+    }
     // Redirect to OAuth endpoint
     const redirectUri = `${window.location.origin}/api/auth/google/callback`;
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo';
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID!;
     const scope = 'openid profile email';
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
     window.location.href = authUrl;
   };
 
   const handleFacebookLogin = () => {
+    if (!hasFacebookAuth) {
+      toast({ 
+        title: "Not Configured", 
+        description: "Facebook login is not yet set up. Please use email and password to login.",
+        variant: "destructive" 
+      });
+      return;
+    }
     // Redirect to OAuth endpoint
     const redirectUri = `${window.location.origin}/api/auth/facebook/callback`;
-    const clientId = import.meta.env.VITE_FACEBOOK_APP_ID || 'demo';
+    const clientId = import.meta.env.VITE_FACEBOOK_APP_ID!;
     const scope = 'public_profile,email';
     const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
     window.location.href = authUrl;
