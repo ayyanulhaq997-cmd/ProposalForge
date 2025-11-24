@@ -72,19 +72,28 @@ async function initStripe() {
 
     const stripeSync = await getStripeSync();
 
-    // Set up managed webhook - Stripe appends the UUID automatically
-    console.log('Setting up managed webhook...');
-    const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
-    const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
-      `${webhookBaseUrl}/api/stripe/webhook`,
-      { enabled_events: ['*'], description: 'Managed webhook for Stripe sync' }
-    );
-    console.log(`Webhook configured with UUID: ${uuid}`);
+    // Only set up webhook and sync if we're using Replit connector
+    if (hasReplitConnector) {
+      try {
+        // Set up managed webhook - Stripe appends the UUID automatically
+        console.log('Setting up managed webhook...');
+        const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+        const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
+          `${webhookBaseUrl}/api/stripe/webhook`,
+          { enabled_events: ['*'], description: 'Managed webhook for Stripe sync' }
+        );
+        console.log(`Webhook configured with UUID: ${uuid}`);
 
-    // Sync existing Stripe data in background
-    stripeSync.syncBackfill().catch((err: any) => {
-      console.error('Error syncing Stripe data:', err);
-    });
+        // Sync existing Stripe data in background
+        stripeSync.syncBackfill().catch((err: any) => {
+          console.error('Error syncing Stripe data:', err);
+        });
+      } catch (webhookError: any) {
+        console.error('Error setting up Stripe webhook:', webhookError.message);
+      }
+    } else {
+      console.log('Stripe configured with environment variables - webhook sync disabled');
+    }
   } catch (error) {
     console.error('Failed to initialize Stripe:', error);
   }
