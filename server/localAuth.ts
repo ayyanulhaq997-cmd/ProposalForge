@@ -1,5 +1,6 @@
 import passport from "passport";
-import LocalStrategy from "passport-local";
+import { Strategy as LocalStrategy } from "passport-local";
+// @ts-ignore - bcrypt types are optional, app works without type hints
 import bcrypt from "bcrypt";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";

@@ -165,7 +165,7 @@ export default function Login() {
                 </div>
                 <Button
                   type="button"
-                  variant="link"
+                  variant="ghost"
                   className="text-sm p-0 h-auto font-normal"
                   data-testid="button-forgot-password"
                 >

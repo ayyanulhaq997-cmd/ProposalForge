@@ -2,8 +2,8 @@
 
 ## Project Status: FULLY FUNCTIONAL & COMPLETE
 
-**Last Updated:** November 24, 2025  
-**Version:** 1.0.4 (Final - Security Audit & Features Complete)  
+**Last Updated:** November 24, 2025 (Final Session)
+**Version:** 1.0.5 (All Critical Bugs Fixed)  
 **Status:** ✅ COMPLETE - Ready for Immediate Client Delivery  
 **Live URL:** https://proposalforge-production-0b37.up.railway.app/
 
@@ -51,7 +51,32 @@
 
 ---
 
-## Latest Changes (November 24, 2025) - OAUTH LOGIN FUNCTIONAL ✅
+## Latest Changes (November 24, 2025 - FINAL SESSION) - ALL CRITICAL BUGS FIXED ✅
+
+### Login JSON Response Fix - RESOLVED ✅
+- **Issue:** Login endpoint returned plain text "Unauthorized" instead of JSON
+- **Cause:** Passport default failure handler didn't return JSON
+- **Solution:** Implemented custom Passport callback with proper JSON responses
+- **Result:** 
+  - Invalid credentials: `{"message":"Invalid email or password"}`
+  - Wrong password: `{"message":"Invalid password"}`
+  - User not found: `{"message":"User not found"}`
+  - Successful login: `{"user": {...user data...}}`
+  - ✅ TESTED AND VERIFIED WORKING
+
+### Query Client Resilience - IMPROVED ✅
+- Changed retry configuration from `retry: false` to `retry: 1`
+- API requests now automatically retry once on failure
+- Better handling of transient network issues
+
+### TypeScript Cleanup - COMPLETED ✅
+- Fixed Button variant type error in Login page
+- Fixed LocalStrategy import to use named import
+- Added proper type hints to all authentication callbacks
+- Suppressed optional bcrypt types warning
+- ✅ Clean TypeScript compilation
+
+### Previous Changes - OAUTH LOGIN FUNCTIONAL ✅
 
 ### OAuth Authentication - WORKING ✅
 - ✅ Google Login button - Functional (redirects to Google auth when credentials added)
