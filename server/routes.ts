@@ -48,8 +48,16 @@ async function seedProperties() {
   }
 }
 
-// Initialize Stripe on startup (optional - only if credentials are available)
+// Initialize Stripe on startup (optional - only on Replit with credentials)
 async function initStripe() {
+  // IMPORTANT: Only run on Replit deployment to avoid exhausting database connections on external providers like Railway/Neon
+  const hasReplitConnector = process.env.REPLIT_CONNECTORS_HOSTNAME && (process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL);
+  
+  if (!hasReplitConnector) {
+    console.log('ℹ️ Stripe sync skipped - not running on Replit. Payments work with environment variables only.');
+    return;
+  }
+
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     console.log('DATABASE_URL not found, skipping Stripe initialization');
@@ -57,12 +65,11 @@ async function initStripe() {
   }
 
   try {
-    // Check if Stripe credentials are available before attempting initialization
+    // Check if Stripe credentials are available
     const hasEnvCredentials = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY;
-    const hasReplitConnector = process.env.REPLIT_CONNECTORS_HOSTNAME && (process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL);
     
-    if (!hasEnvCredentials && !hasReplitConnector) {
-      console.log('Stripe credentials not found - payments will not be available. To enable, add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY environment variables or use Replit Stripe connector.');
+    if (!hasEnvCredentials) {
+      console.log('Stripe credentials not found - payments will not be available. To enable, add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY environment variables.');
       return;
     }
 
@@ -70,29 +77,24 @@ async function initStripe() {
     await runMigrations({ databaseUrl });
     console.log('Stripe schema ready');
 
-    const stripeSync = await getStripeSync();
+    try {
+      const stripeSync = await getStripeSync();
 
-    // Only set up webhook and sync if we're using Replit connector
-    if (hasReplitConnector) {
-      try {
-        // Set up managed webhook - Stripe appends the UUID automatically
-        console.log('Setting up managed webhook...');
-        const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
-        const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
-          `${webhookBaseUrl}/api/stripe/webhook`,
-          { enabled_events: ['*'], description: 'Managed webhook for Stripe sync' }
-        );
-        console.log(`Webhook configured with UUID: ${uuid}`);
+      // Set up managed webhook - Stripe appends the UUID automatically
+      console.log('Setting up managed webhook...');
+      const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
+        `${webhookBaseUrl}/api/stripe/webhook`,
+        { enabled_events: ['*'], description: 'Managed webhook for Stripe sync' }
+      );
+      console.log(`Webhook configured with UUID: ${uuid}`);
 
-        // Sync existing Stripe data in background
-        stripeSync.syncBackfill().catch((err: any) => {
-          console.error('Error syncing Stripe data:', err);
-        });
-      } catch (webhookError: any) {
-        console.error('Error setting up Stripe webhook:', webhookError.message);
-      }
-    } else {
-      console.log('Stripe configured with environment variables - webhook sync disabled');
+      // Sync existing Stripe data in background
+      stripeSync.syncBackfill().catch((err: any) => {
+        console.error('Error syncing Stripe data:', err);
+      });
+    } catch (webhookError: any) {
+      console.error('Error setting up Stripe webhook:', webhookError.message);
     }
   } catch (error) {
     console.error('Failed to initialize Stripe:', error);
