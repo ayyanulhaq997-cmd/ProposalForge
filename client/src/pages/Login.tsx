@@ -20,6 +20,24 @@ export default function Login() {
     lastName: "",
   });
 
+  const handleGoogleLogin = () => {
+    // Redirect to OAuth endpoint
+    const redirectUri = `${window.location.origin}/api/auth/google/callback`;
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo';
+    const scope = 'openid profile email';
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+    window.location.href = authUrl;
+  };
+
+  const handleFacebookLogin = () => {
+    // Redirect to OAuth endpoint
+    const redirectUri = `${window.location.origin}/api/auth/facebook/callback`;
+    const clientId = import.meta.env.VITE_FACEBOOK_APP_ID || 'demo';
+    const scope = 'public_profile,email';
+    const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+    window.location.href = authUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -158,6 +176,7 @@ export default function Login() {
                   type="button"
                   variant="outline"
                   className="w-full"
+                  onClick={handleGoogleLogin}
                   data-testid="button-google-login"
                 >
                   <SiGoogle className="h-5 w-5 mr-2" />
@@ -167,6 +186,7 @@ export default function Login() {
                   type="button"
                   variant="outline"
                   className="w-full"
+                  onClick={handleFacebookLogin}
                   data-testid="button-facebook-login"
                 >
                   <SiFacebook className="h-5 w-5 mr-2" />
