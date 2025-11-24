@@ -37,7 +37,7 @@ export async function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(
       { usernameField: "email", passwordField: "password" },
-      async (email: string, password: string, done) => {
+      async (email: string, password: string, done: (err: Error | null, user?: any, info?: any) => void) => {
         try {
           const user = await storage.getUser(email);
           if (!user) {
@@ -49,27 +49,40 @@ export async function setupAuth(app: Express) {
           }
           return done(null, user);
         } catch (error) {
-          return done(error);
+          return done(error as Error);
         }
       }
     )
   );
 
-  passport.serializeUser((user: any, done) => {
+  passport.serializeUser((user: any, done: (err: Error | null, id?: any) => void) => {
     done(null, user.id);
   });
 
-  passport.deserializeUser(async (id: string, done) => {
+  passport.deserializeUser(async (id: string, done: (err: Error | null, user?: any) => void) => {
     try {
       const user = await storage.getUser(id);
       done(null, user);
     } catch (error) {
-      done(error);
+      done(error as Error);
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req: any, res) => {
-    res.json({ user: req.user });
+  app.post("/api/login", (req: any, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Authentication error" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid email or password" });
+      }
+      req.login(user, (loginErr: Error | null) => {
+        if (loginErr) {
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.json({ user });
+      });
+    })(req, res, next);
   });
 
   app.post("/api/signup", async (req: any, res) => {
@@ -91,7 +104,7 @@ export async function setupAuth(app: Express) {
         passwordHash: hashedPassword,
         role: "guest"
       });
-      req.login(user, (err) => {
+      req.login(user, (err: Error | null) => {
         if (err) return res.status(500).json({ message: "Login failed" });
         res.json({ user });
       });
@@ -101,7 +114,7 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/logout", (req, res) => {
-    req.logout((err) => {
+    req.logout((err: Error | null) => {
       if (err) return res.status(500).json({ message: "Logout failed" });
       res.json({ message: "Logged out" });
     });
