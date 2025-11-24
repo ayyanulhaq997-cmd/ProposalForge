@@ -70,6 +70,7 @@ export default function Login() {
           ? formData
           : { email: formData.email, password: formData.password }
         ),
+        credentials: "include",
       });
 
       if (!response.ok) {
