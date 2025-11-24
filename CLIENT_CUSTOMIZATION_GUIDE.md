@@ -4,7 +4,7 @@ Your app is live! Here's how to customize it for your needs.
 
 ---
 
-## 🔑 Step 1: Log In as Admin
+##  Step 1: Log In as Admin
 
 1. Go to your website: `https://proposalforge-production-0b37.up.railway.app/`
 2. Click **"Login"** in the top right
@@ -15,7 +15,7 @@ Your app is live! Here's how to customize it for your needs.
 
 ---
 
-## 🏠 Step 2: Update Property Details
+## Step 2: Update Property Details
 
 ### Update Existing Properties:
 
@@ -39,7 +39,7 @@ Your app is live! Here's how to customize it for your needs.
 
 ---
 
-## 📸 Step 3: Add Real Images
+##  Step 3: Add Real Images
 
 ### To Upload Property Images:
 
@@ -57,7 +57,7 @@ Your app is live! Here's how to customize it for your needs.
 
 ---
 
-## 🎨 Step 4: Customize Branding
+##  Step 4: Customize Branding
 
 ### Change App Colors & Theme:
 
@@ -79,7 +79,7 @@ The app has **Light Mode** and **Dark Mode** by default. To customize colors:
 
 ---
 
-## 💰 Step 5: Set Up Real Payments
+##  Step 5: Set Up Real Payments
 
 Once you're ready to accept payments:
 
@@ -90,7 +90,7 @@ Once you're ready to accept payments:
 
 ---
 
-## 📊 Step 6: View Bookings & Analytics
+##  Step 6: View Bookings & Analytics
 
 ### Check Bookings:
 
@@ -109,7 +109,7 @@ Once you're ready to accept payments:
 
 ---
 
-## 👥 Step 7: Manage Users
+##  Step 7: Manage Users
 
 ### Create Admin Users:
 
@@ -129,7 +129,7 @@ Once you're ready to accept payments:
 
 ---
 
-## 🔐 Important Security Notes
+##  Important Security Notes
 
 - **Never share your login credentials** with anyone
 - **Change password regularly** - Click profile → Settings → Change Password
@@ -138,7 +138,7 @@ Once you're ready to accept payments:
 
 ---
 
-## ❓ Need Help?
+##  Need Help?
 
 If something doesn't work:
 
@@ -152,13 +152,13 @@ If something doesn't work:
 ## 📱 Responsive Design
 
 Your app works on:
-- ✅ Desktop (recommended for editing)
-- ✅ Tablet
-- ✅ Mobile phones
+-  Desktop (recommended for editing)
+- Tablet
+-  Mobile phones
 
 ---
 
-## 🎯 Launch Checklist
+##  Launch Checklist
 
 Before going public, make sure you've:
 
@@ -173,8 +173,8 @@ Before going public, make sure you've:
 
 ---
 
-## 🚀 You're Ready!
+## You're Ready!
 
 Your vacation rental platform is ready to accept bookings. Start by adding your first properties and share the link with friends to test it out!
 
-**Questions?** Contact your developer for support.
+**Questions?** Contact me for support.

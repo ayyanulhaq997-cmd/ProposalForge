@@ -2,7 +2,7 @@
 
 ## What's Currently Happening
 
-Your booking app has Google and Facebook login buttons on the login page. When users click them:
+Your booking Website has Google and Facebook login buttons on the login page. When users click them:
 
 **Right Now:** They see an error message saying "Not Configured" because the OAuth credentials haven't been set up yet.
 
@@ -12,16 +12,16 @@ Your booking app has Google and Facebook login buttons on the login page. When u
 
 ## How Users Will Benefit
 
-✅ **Faster Sign-ups** - Click once instead of entering email/password  
-✅ **Auto-fill Data** - Their name and profile picture auto-populate  
-✅ **Better UX** - No password to remember  
-✅ **Security** - Powered by Google/Facebook's secure authentication  
+ **Faster Sign-ups** - you once instead of entering email/password  
+ **Auto-fill Data** - Their name and profile picture auto-populate  
+ **Better UX** - No password to remember  
+ **Security** - Powered by Google/Facebook's secure authentication  
 
 ---
 
-## Setup Instructions for Your Client
+## Setup Instructions for Client
 
-Your client can enable OAuth by following these steps:
+ client can enable OAuth by following these steps:
 
 ### Step 1: Set Up Google OAuth
 

@@ -97,8 +97,8 @@ You are receiving a **complete, production-ready vacation rental booking platfor
 
 #### 1. Clone the Code
 ```bash
-git clone https://github.com/ayyanulhaq997-cmd/proposalforge.git
-cd proposalforge
+git clone https://github.com/ayyanulhaq997-cmd/ProposaForge.git
+cd ProposaForge
 npm install
 ```
 
@@ -463,7 +463,7 @@ Before going live, ensure you have:
 
 Your vacation rental platform is complete and ready to serve customers. All code is yours to modify and deploy as needed. 
 
-**Happy bookings! 🚀**
+**Happy bookings!**
 
 ---
 
@@ -480,9 +480,6 @@ Your vacation rental platform is complete and ready to serve customers. All code
 - Number: `4242 4242 4242 4242`
 - Expiry: Any future date
 - CVC: Any 3 digits
-
-### GitHub Repository
-Ask developer for repository access
 
 ### Stack Summary
 - Frontend: React 18 + TypeScript + Tailwind
