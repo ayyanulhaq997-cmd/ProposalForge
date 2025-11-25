@@ -1,9 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocation } from "wouter";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createInsertSchema } from "drizzle-zod";
 import { properties } from "@shared/schema";
-import type { Property } from "@shared/schema";
 
 const insertPropertySchema = createInsertSchema(properties).omit({ 
   id: true, 
@@ -21,7 +20,11 @@ const insertPropertySchema = createInsertSchema(properties).omit({
   hostId: true 
 });
 
-export default function CreateProperty() {
+interface CreatePropertyFormProps {
+  onSuccess?: () => void;
+}
+
+export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
@@ -55,11 +58,11 @@ export default function CreateProperty() {
       const res = await apiRequest("POST", "/api/properties", data);
       return res.json();
     },
-    onSuccess: (property: Property) => {
+    onSuccess: () => {
       toast({ title: "Success", description: "Property created successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/host/properties"] });
       queryClient.invalidateQueries({ queryKey: ["/api/host/stats"] });
-      navigate("/host");
+      onSuccess?.();
     },
     onError: (error: any) => {
       toast({ 
