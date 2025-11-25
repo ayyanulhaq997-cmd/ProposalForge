@@ -28,6 +28,7 @@ import Login from "@/pages/Login";
 import Blog from "@/pages/Blog";
 import VerificationStatus from "@/pages/VerificationStatus";
 import VerificationRequired from "@/pages/VerificationRequired";
+import AdminSettings from "@/pages/AdminSettings";
 
 function Router() {
   const { isAuthenticated, isLoading, isAdmin, isHost } = useAuth();
@@ -67,6 +68,7 @@ function Router() {
 
       {/* Admin routes - accessible if authenticated and admin */}
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/:rest*" component={AdminDashboard} />
       <Route path="/admin/bookings" component={AdminBookings} />
       <Route path="/admin/content" component={AdminContentManager} />

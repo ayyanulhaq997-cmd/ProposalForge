@@ -1093,6 +1093,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ADMIN SETTINGS - CHANGE EMAIL
+  app.patch('/api/admin/settings/email', [isAuthenticated, requireRoles(ROLES.ADMIN)], async (req: any, res) => {
+    try {
+      const adminId = (req as any).user.id;
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+
+      // Check if email already exists
+      const existing = await storage.getUser(email);
+      if (existing && existing.id !== adminId) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+
+      // Update user email
+      const updated = await storage.upsertUser({
+        id: adminId,
+        email,
+      });
+
+      res.json({ message: 'Email updated successfully', user: updated });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to update email' });
+    }
+  });
+
+  // ADMIN SETTINGS - CHANGE PASSWORD
+  app.patch('/api/admin/settings/password', [isAuthenticated, requireRoles(ROLES.ADMIN)], async (req: any, res) => {
+    try {
+      const adminId = (req as any).user.id;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Current and new password required' });
+      }
+
+      // Get admin user
+      const admin = await storage.getUser(adminId);
+      if (!admin) {
+        return res.status(404).json({ message: 'Admin not found' });
+      }
+
+      // Verify current password
+      const bcrypt = require('bcrypt');
+      const isValid = await bcrypt.compare(currentPassword, admin.passwordHash || '');
+      if (!isValid) {
+        return res.status(401).json({ message: 'Current password is incorrect' });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      // Update password
+      await storage.upsertUser({
+        id: adminId,
+        passwordHash: hashedPassword,
+      });
+
+      res.json({ message: 'Password updated successfully. Please log in again.' });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to update password' });
+    }
+  });
+
   // Get users (admin)
   app.get('/api/users/:id', async (req: any, res: any) => {
     try {
