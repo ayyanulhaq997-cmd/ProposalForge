@@ -21,7 +21,8 @@ export function PublicHeader() {
 
   const handleLogout = async () => {
     try {
-      const response: any = await apiRequest('GET', '/api/logout');
+      const res: any = await apiRequest('GET', '/api/logout');
+      const data = await res.json();
       
       // Invalidate auth cache so app knows user is logged out
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
@@ -29,7 +30,7 @@ export function PublicHeader() {
       // Show success message
       toast({
         title: "Logged out",
-        description: response?.message || "You have been successfully logged out",
+        description: data?.message || "You have been successfully logged out",
       });
       
       // Redirect to homepage after a brief delay to show toast
