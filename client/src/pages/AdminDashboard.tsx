@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import {
@@ -36,6 +37,154 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
+
+// Properties Management View
+function PropertiesView() {
+  const { data: properties, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/properties'],
+  });
+
+  if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Properties Management</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>All Properties ({properties?.length || 0})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {properties && properties.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Host ID</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Price/Night</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {properties.map(prop => (
+                  <TableRow key={prop.id}>
+                    <TableCell className="font-semibold">{prop.title}</TableCell>
+                    <TableCell>{prop.hostId}</TableCell>
+                    <TableCell>{prop.location}</TableCell>
+                    <TableCell>${prop.pricePerNight}</TableCell>
+                    <TableCell>
+                      <Badge variant={prop.isActive ? "default" : "secondary"}>
+                        {prop.status || 'active'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-muted-foreground">No properties found</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Hosts Management View
+function HostsView() {
+  const { data: hosts, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/hosts'],
+  });
+
+  if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Hosts Management</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>All Hosts ({hosts?.length || 0})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {hosts && hosts.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Properties</TableHead>
+                  <TableHead>Joined</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {hosts.map(host => (
+                  <TableRow key={host.id}>
+                    <TableCell>{host.email}</TableCell>
+                    <TableCell>{host.firstName} {host.lastName}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{host.propertyCount || 0}</Badge>
+                    </TableCell>
+                    <TableCell>{new Date(host.createdAt).toLocaleDateString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-muted-foreground">No hosts found</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Settings/CMS View
+function SettingsView() {
+  const [heroTitle, setHeroTitle] = React.useState("Discover Your Perfect Stay");
+  const [heroImage, setHeroImage] = React.useState("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200");
+  
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Website Settings</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Hero Section Customization</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Hero Headline</label>
+            <input
+              type="text"
+              value={heroTitle}
+              onChange={(e) => setHeroTitle(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+              data-testid="input-hero-title"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Hero Background Image URL</label>
+            <input
+              type="text"
+              value={heroImage}
+              onChange={(e) => setHeroImage(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+              data-testid="input-hero-image"
+            />
+          </div>
+          <div className="bg-muted p-4 rounded-md">
+            <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+            <div
+              className="w-full h-32 rounded-md bg-cover bg-center"
+              style={{ backgroundImage: `url(${heroImage})` }}
+              data-testid="hero-preview"
+            />
+          </div>
+          <Button data-testid="button-save-settings">Save Changes</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const [location, navigate] = useLocation();
@@ -272,17 +421,7 @@ export default function AdminDashboard() {
             
             {/* Other Views */}
             {currentView === 'properties' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Properties Management</h2>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>All Properties</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">Properties list coming soon</p>
-                  </CardContent>
-                </Card>
-              </div>
+              <PropertiesView />
             )}
             
             {currentView === 'users' && (
@@ -300,17 +439,7 @@ export default function AdminDashboard() {
             )}
             
             {currentView === 'hosts' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Hosts Management</h2>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>All Hosts</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">Hosts list coming soon</p>
-                  </CardContent>
-                </Card>
-              </div>
+              <HostsView />
             )}
             
             {currentView === 'verification' && (
@@ -328,17 +457,7 @@ export default function AdminDashboard() {
             )}
             
             {currentView === 'settings' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Settings</h2>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Admin Settings</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">Settings coming soon</p>
-                  </CardContent>
-                </Card>
-              </div>
+              <SettingsView />
             )}
           </main>
         </div>
