@@ -8,11 +8,19 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface VerificationData {
+  status?: 'pending' | 'verified' | 'rejected';
+  id?: string;
+  documentType?: string;
+  verifiedAt?: string;
+  rejectionReason?: string;
+}
+
 export default function VerificationRequired() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
 
-  const { data: verification, isLoading } = useQuery({
+  const { data: verification, isLoading } = useQuery<VerificationData>({
     queryKey: ['/api/user/verification'],
     enabled: isAuthenticated,
   });

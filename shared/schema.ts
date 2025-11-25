@@ -434,9 +434,10 @@ export type Favorite = typeof favorites.$inferSelect;
 export const idVerifications = pgTable("id_verifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  documentType: varchar("document_type", { length: 50 }).notNull(), // 'passport', 'drivers_license', 'id_card'
+  documentType: varchar("document_type", { length: 50 }).notNull(), // 'passport', 'drivers_license', 'id_card', 'cnic'
   documentUrl: text("document_url").notNull(),
-  backDocumentUrl: text("back_document_url"), // For 2-sided documents
+  backDocumentUrl: text("back_document_url"), // For 2-sided documents like passports, driver's license
+  selfieUrl: text("selfie_url"), // Selfie photo for liveness verification
   status: varchar("status", { length: 20 }).default('pending'), // pending, verified, rejected
   verifiedAt: timestamp("verified_at"),
   verifiedBy: varchar("verified_by").references(() => users.id), // Admin who verified
