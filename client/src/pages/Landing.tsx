@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Search, Calendar, Users, MapPin, Home, Mountain, Building2, Palmtree, Heart, Loader2, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,24 +52,49 @@ export default function Landing() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-          <button 
+          <motion.button 
             onClick={handleChatClick}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
             className="inline-block bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 px-4 py-2 rounded-full mb-4 text-sm font-medium hover:bg-pink-200 dark:hover:bg-pink-900/50 cursor-pointer transition-colors active-elevate-2"
             data-testid="button-chat-from-hero"
           >
             ✨ Encuentra tu estadía ideal
-          </button>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2 sm:mb-4 tracking-tight" data-testid="text-hero-title">
+          </motion.button>
+          <motion.h1 
+            className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2 sm:mb-4 tracking-tight" 
+            data-testid="text-hero-title"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             <span className="text-pink-400">Experimenta</span>
-          </h1>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 sm:mb-8 tracking-tight">
+          </motion.h1>
+          <motion.h2 
+            className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 sm:mb-8 tracking-tight"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
             el lugar perfecto
-          </h2>
-          <p className="text-lg sm:text-xl text-white/90 mb-8 sm:mb-12" data-testid="text-hero-subtitle">
+          </motion.h2>
+          <motion.p 
+            className="text-lg sm:text-xl text-white/90 mb-8 sm:mb-12" 
+            data-testid="text-hero-subtitle"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
             Descubre alojamientos únicos y vive experiencias inolvidables en los destinos más increíbles
-          </p>
+          </motion.p>
 
           {/* Search Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.7 }}
+          >
           <Card className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-0 shadow-xl">
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row gap-3">
@@ -95,6 +121,7 @@ export default function Landing() {
               </div>
             </CardContent>
           </Card>
+          </motion.div>
         </div>
       </section>
 
