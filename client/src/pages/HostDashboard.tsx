@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useEffect } from "react";
 import { TrendingUp, Plus, Edit, Trash2, Loader2, Star, DollarSign, Zap, Calendar, Home } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -311,6 +312,12 @@ export default function HostDashboard() {
   const [, navigate] = useLocation();
   const { isAuthenticated, isLoading, isHost, isAdmin } = useAuth();
 
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || (!isHost && !isAdmin))) {
+      navigate("/login");
+    }
+  }, [isLoading, isAuthenticated, isHost, isAdmin, navigate]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -320,7 +327,6 @@ export default function HostDashboard() {
   }
 
   if (!isAuthenticated || (!isHost && !isAdmin)) {
-    navigate("/login");
     return null;
   }
 
