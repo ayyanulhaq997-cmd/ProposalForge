@@ -26,6 +26,7 @@ import StayHistory from "@/pages/StayHistory";
 import ProfileManagement from "@/pages/ProfileManagement";
 import Login from "@/pages/Login";
 import Blog from "@/pages/Blog";
+import VerificationStatus from "@/pages/VerificationStatus";
 
 function Router() {
   const { isAuthenticated, isLoading, isAdmin, isHost } = useAuth();
@@ -54,6 +55,7 @@ function Router() {
       <Route path="/stats" component={UserStatsPage} />
       <Route path="/stays" component={StayHistory} />
       <Route path="/profile" component={ProfileManagement} />
+      <Route path="/verify" component={VerificationStatus} />
       <Route path="/host-profile/:hostId" component={HostProfile} />
 
       {/* Host routes - admins can also access */}
