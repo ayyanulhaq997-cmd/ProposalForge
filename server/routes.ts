@@ -705,6 +705,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Allow both authenticated and guest users to book
       const userId = req.user?.id || null;
       
+      // =====================================================================
+      // KYC & PAYMENT VERIFICATION CHECK - MANDATORY FOR AUTHENTICATED USERS
+      // =====================================================================
+      if (userId) {
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(401).json({ message: "User not found" });
+        }
+
+        // Check ID verification (KYC) status
+        const verification = await storage.getIdVerification(userId);
+        const kycVerified = verification?.status === 'verified';
+
+        if (!kycVerified) {
+          return res.status(403).json({ 
+            message: "Cannot complete booking",
+            reason: "Your ID verification must be approved by admin before booking",
+            code: "KYC_NOT_VERIFIED"
+          });
+        }
+
+        // Check payment method verification
+        if (!user.paymentVerified) {
+          return res.status(403).json({ 
+            message: "Cannot complete booking",
+            reason: "Admin must verify your payment method before booking",
+            code: "PAYMENT_NOT_VERIFIED"
+          });
+        }
+      }
+      
       // Validate request body
       const bookingRequest = insertBookingSchema.partial().extend({
         propertyId: insertBookingSchema.shape.propertyId,
