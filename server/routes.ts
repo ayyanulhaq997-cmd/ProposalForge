@@ -1234,6 +1234,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update booking payment amount (admin)
+  app.patch('/api/admin/bookings/:id/amount', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res) => {
+    try {
+      const { total } = req.body;
+      const bookingId = req.params.id;
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      if (typeof total !== 'number' || total < 0) {
+        return res.status(400).json({ message: "Valid amount required" });
+      }
+
+      const updated = await storage.updateBooking(bookingId, { total });
+
+      await storage.createAuditLog({
+        userId: req.user?.id,
+        action: 'UPDATE_BOOKING_AMOUNT',
+        entityType: 'booking',
+        entityId: bookingId,
+        changes: { oldTotal: booking.total, newTotal: total }
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating booking amount:", error);
+      res.status(500).json({ message: error.message || "Failed to update booking amount" });
+    }
+  });
+
   // Get audit logs (admin)
   app.get('/api/admin/audit-logs', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res) => {
     try {

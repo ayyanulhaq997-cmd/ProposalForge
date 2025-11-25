@@ -1,5 +1,5 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import {
   Users,
@@ -11,11 +11,16 @@ import {
   Calendar,
   Shield,
   Loader2,
+  Activity,
+  Edit2,
+  Save,
+  X,
 } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -37,6 +42,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Properties Management View
 function PropertiesView() {
@@ -138,6 +145,186 @@ function HostsView() {
   );
 }
 
+// Bookings Management View
+function BookingsView() {
+  const { data: bookings, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/bookings/recent'],
+  });
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [editData, setEditData] = React.useState<any>({});
+  const { toast } = useToast();
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ bookingId, data }: any) => {
+      if (editData.dates?.checkIn && editData.dates?.checkOut) {
+        await apiRequest('PATCH', `/api/admin/bookings/${bookingId}/reschedule`, {
+          checkIn: editData.dates.checkIn,
+          checkOut: editData.dates.checkOut,
+        });
+      }
+      if (editData.amount) {
+        await apiRequest('PATCH', `/api/admin/bookings/${bookingId}/amount`, {
+          total: parseFloat(editData.amount),
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings/recent'] });
+      setEditingId(null);
+      toast({ title: "Success", description: "Booking updated" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Bookings Management</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>All Bookings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {bookings && bookings.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Check-In</TableHead>
+                  <TableHead>Check-Out</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bookings.map((booking) => (
+                  <TableRow key={booking.id}>
+                    <TableCell className="font-mono text-xs">{booking.id.substring(0, 8)}</TableCell>
+                    <TableCell>
+                      {editingId === booking.id ? (
+                        <Input 
+                          type="date" 
+                          defaultValue={booking.checkIn?.split('T')[0]}
+                          onChange={(e) => setEditData({ ...editData, dates: { ...editData.dates, checkIn: e.target.value } })}
+                          className="w-32"
+                          data-testid="input-checkin"
+                        />
+                      ) : (
+                        new Date(booking.checkIn).toLocaleDateString()
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === booking.id ? (
+                        <Input 
+                          type="date" 
+                          defaultValue={booking.checkOut?.split('T')[0]}
+                          onChange={(e) => setEditData({ ...editData, dates: { ...editData.dates, checkOut: e.target.value } })}
+                          className="w-32"
+                          data-testid="input-checkout"
+                        />
+                      ) : (
+                        new Date(booking.checkOut).toLocaleDateString()
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === booking.id ? (
+                        <Input 
+                          type="number" 
+                          defaultValue={booking.total}
+                          onChange={(e) => setEditData({ ...editData, amount: e.target.value })}
+                          className="w-24"
+                          data-testid="input-amount"
+                        />
+                      ) : (
+                        `$${Number(booking.total || 0).toFixed(2)}`
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={booking.status === 'confirmed' ? 'default' : 'secondary'}>
+                        {booking.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {editingId === booking.id ? (
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => updateMutation.mutate({ bookingId: booking.id, data: editData })} data-testid="button-save-booking">
+                            <Save className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingId(null)} data-testid="button-cancel">
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => { setEditingId(booking.id); setEditData({}); }} data-testid={`button-edit-${booking.id}`}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-muted-foreground">No bookings found</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Activity View
+function ActivityView() {
+  const { data: logs, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/audit-logs'],
+  });
+
+  if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">User & Host Activity</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity Log</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {logs && logs.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Action</TableHead>
+                  <TableHead>User ID</TableHead>
+                  <TableHead>Entity</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Details</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {logs.map((log, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell><Badge variant="outline">{log.action}</Badge></TableCell>
+                    <TableCell className="font-mono text-xs">{log.userId?.substring(0, 8)}</TableCell>
+                    <TableCell>{log.entityType}: {log.entityId?.substring(0, 8)}</TableCell>
+                    <TableCell className="text-sm">{new Date(log.createdAt).toLocaleString()}</TableCell>
+                    <TableCell className="text-xs">{JSON.stringify(log.changes).substring(0, 50)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-muted-foreground">No activity found</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // Settings/CMS View
 function SettingsView() {
   const [heroTitle, setHeroTitle] = React.useState("Discover Your Perfect Stay");
@@ -202,8 +389,9 @@ export default function AdminDashboard() {
 
   const menuItems = [
     { title: "Dashboard", icon: TrendingUp, path: "/admin" },
-    { title: "Properties", icon: Home, path: "/admin/properties" },
     { title: "Bookings", icon: Calendar, path: "/admin/bookings" },
+    { title: "Activity", icon: Activity, path: "/admin/activity" },
+    { title: "Properties", icon: Home, path: "/admin/properties" },
     { title: "Users", icon: Users, path: "/admin/users" },
     { title: "Hosts", icon: Building2, path: "/admin/hosts" },
     { title: "Verification", icon: Shield, path: "/admin/verification" },
@@ -420,6 +608,14 @@ export default function AdminDashboard() {
             )}
             
             {/* Other Views */}
+            {currentView === 'bookings' && (
+              <BookingsView />
+            )}
+
+            {currentView === 'activity' && (
+              <ActivityView />
+            )}
+            
             {currentView === 'properties' && (
               <PropertiesView />
             )}
