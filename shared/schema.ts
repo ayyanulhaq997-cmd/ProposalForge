@@ -40,6 +40,8 @@ export const users: any = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role", { length: 20 }).notNull().default('guest'), // guest, host, admin
   isVerified: boolean("is_verified").default(false),
+  kycVerified: boolean("kyc_verified").default(false), // ID/passport verified by admin
+  paymentVerified: boolean("payment_verified").default(false), // Payment method verified
   stripeCustomerId: varchar("stripe_customer_id"),
   squareCustomerId: varchar("square_customer_id"),
   language: varchar("language", { length: 5 }).default('en'), // en, es
