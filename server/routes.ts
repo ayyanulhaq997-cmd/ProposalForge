@@ -965,6 +965,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all properties (admin - global view)
+  app.get('/api/admin/properties', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res) => {
+    try {
+      const properties = await storage.getProperties();
+      res.json(properties);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      res.status(500).json({ message: "Failed to fetch properties" });
+    }
+  });
+
   // Get recent bookings (admin)
   app.get('/api/admin/bookings/recent', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res) => {
     try {
