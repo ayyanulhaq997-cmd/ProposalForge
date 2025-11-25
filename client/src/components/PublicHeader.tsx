@@ -24,8 +24,8 @@ export function PublicHeader() {
       const res: any = await apiRequest('GET', '/api/logout');
       const data = await res.json();
       
-      // Invalidate auth cache so app knows user is logged out
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      // Immediately clear user data from cache
+      queryClient.setQueryData(['/api/auth/user'], null);
       
       // Show success message
       toast({
