@@ -460,7 +460,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
 
-      const validated = insertPropertySchema.parse(req.body);
+      const validated = insertPropertySchema.parse({
+        ...req.body,
+        hostId: userId,
+      });
       const property = await storage.createProperty({
         ...validated,
         hostId: userId,
