@@ -1,35 +1,31 @@
 import type { RequestHandler } from "express";
-import { storage } from "./storage";
 
 /**
  * Creates a middleware that enforces role-based access control
+ * Works with both local auth (req.user.role) and OAuth (req.user.claims)
  * @param allowedRoles - Array of roles allowed to access this route
  * @returns Express middleware that checks user role
  */
 export function requireRoles(...allowedRoles: string[]): RequestHandler {
-  return async (req: any, res, next) => {
+  return (req: any, res, next) => {
     // Check if user is authenticated (should be used after isAuthenticated middleware)
-    if (!req.user || !req.user.claims) {
+    if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const userId = req.user.claims.sub;
-    const user = await storage.getUser(userId);
-
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
-
+    // Support both local auth (req.user.role) and OAuth (req.user.claims)
+    const userRole = req.user.role?.toLowerCase() || "guest";
+    
     // Check if user's role is in allowed roles
-    if (!allowedRoles.includes(user.role)) {
+    if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({ 
-        message: `Access denied. Required roles: ${allowedRoles.join(", ")}. Your role: ${user.role}` 
+        message: `Access denied. Required roles: ${allowedRoles.join(", ")}. Your role: ${userRole}` 
       });
     }
 
-    // Attach user object to request for downstream handlers
-    req.userRole = user.role;
-    req.userId = userId;
+    // Attach user data to request for downstream handlers
+    req.userRole = userRole;
+    req.userId = req.user.id;
 
     next();
   };
