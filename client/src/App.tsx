@@ -55,8 +55,8 @@ function Router() {
       <Route path="/profile" component={ProfileManagement} />
       <Route path="/host-profile/:hostId" component={HostProfile} />
 
-      {/* Host routes */}
-      {isHost && (
+      {/* Host routes - admins can also access */}
+      {(isHost || isAdmin) && (
         <>
           <Route path="/host" component={HostDashboard} />
           <Route path="/host/:rest*" component={HostDashboard} />
