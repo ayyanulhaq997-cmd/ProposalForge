@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "system";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -15,17 +15,64 @@ type ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undefined);
 
-export function ThemeProvider({ children, defaultTheme = "light" }: ThemeProviderProps) {
+// Helper function to get OS dark mode preference
+function getOSTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+// Helper function to get the actual theme (resolving "system" to light/dark)
+function getResolvedTheme(theme: Theme): "light" | "dark" {
+  if (theme === "system") {
+    return getOSTheme();
+  }
+  return theme as "light" | "dark";
+}
+
+export function ThemeProvider({ children, defaultTheme = "system" }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem("theme") as Theme;
-    return stored || defaultTheme;
+    // Try to get stored theme preference
+    const stored = localStorage.getItem("theme") as Theme | null;
+    if (stored) return stored;
+    
+    // If no preference stored, use "system" to follow OS dark mode
+    return defaultTheme;
   });
 
   useEffect(() => {
     const root = document.documentElement;
+    const resolvedTheme = getResolvedTheme(theme);
+    
+    // Update DOM
     root.classList.remove("light", "dark");
-    root.classList.add(theme);
+    root.classList.add(resolvedTheme);
+    
+    // Store user preference
     localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  // Listen for OS dark mode changes (when theme is "system")
+  useEffect(() => {
+    if (theme !== "system") return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    
+    const handleChange = () => {
+      const root = document.documentElement;
+      const resolvedTheme = getOSTheme();
+      root.classList.remove("light", "dark");
+      root.classList.add(resolvedTheme);
+    };
+
+    // Modern browsers: use addEventListener
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    }
+    
+    // Legacy browsers: use addListener (deprecated but still needed for some browsers)
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
@@ -33,7 +80,12 @@ export function ThemeProvider({ children, defaultTheme = "light" }: ThemeProvide
   };
 
   const toggleTheme = () => {
-    setThemeState(prev => prev === "light" ? "dark" : "light");
+    setThemeState(prev => {
+      if (prev === "light") return "dark";
+      if (prev === "dark") return "light";
+      // If system, toggle to opposite of current OS setting
+      return getOSTheme() === "dark" ? "light" : "dark";
+    });
   };
 
   return (
