@@ -2,8 +2,8 @@
 
 ## Project Status: FULLY FUNCTIONAL & COMPLETE
 
-**Last Updated:** November 25, 2025 (Current Session - Final)
-**Version:** 1.0.6 (All Bugs Fixed, Railway Ready)  
+**Last Updated:** November 25, 2025 (Current Session - Host Verification Complete)
+**Version:** 1.0.7 (Host Verification System Added)  
 **Status:** ✅ COMPLETE - Ready for Immediate Deployment
 **Live URL:** https://proposalforge-production-0b37.up.railway.app/
 
@@ -11,29 +11,45 @@
 
 ## Latest Session Updates (November 25, 2025)
 
-### ✅ Create Property Error - FIXED
-- **Issue:** Property creation endpoint was validating before adding `hostId`
-- **Solution:** Modified backend to auto-populate `hostId` from authenticated user before validation
-- **Result:** Property creation form now works 100% - hosts can create properties immediately
+### ✅ Host Verification System - COMPLETE
+- Users can request to become hosts via `POST /api/user/request-host-status`
+- Users cannot create properties or switch to host mode until admin approves
+- Admin sees "Host Verification Requests" tab in admin dashboard to approve/reject applications
+- When approved: user's role changes to 'host' and `hostVerificationStatus` = 'approved'
+- When rejected: user remains 'guest' and `hostVerificationStatus` = 'rejected'
+- Property creation endpoint now validates host verification before allowing property creation
+- Audit logs track all host verification actions
 
-### ✅ Railway Deployment Files - CREATED
-- Created `Dockerfile` for Railway deployment
-- Created `.dockerignore` configuration
-- Created `railway.json` with proper variables
-- Created `RAILWAY_DEPLOYMENT.md` complete deployment guide
+### ✅ Payment Method Verification - COMPLETE
+- New admin dashboard "Verification" tab shows all users with KYC and payment verification status
+- Admin can approve payment methods for users separately from KYC
+- Users cannot book unless BOTH conditions are met:
+  1. KYC Verified (ID approval from admin)
+  2. Payment Method Verified (payment approval from admin)
+- Payment verification tracked in `user.paymentVerified` boolean field
 
-### ✅ Stripe Integration - CONNECTED
-- Replit Stripe integration already active (connection:conn_stripe_01KAPB1NF6Z9Y7F87FFA0XZPX2)
-- Secrets managed securely at runtime (not build time)
-- Automatic sandbox/production mode switching
-- Railway deployment fully supported
+### ✅ Complete Verification Flow
+1. **User Signs Up** → Auto-redirected to upload ID
+2. **User Uploads ID** → Admin approves in "Verification" tab (KYC Verified)
+3. **Admin Approves Payment** → Sets Payment Verified in same tab
+4. **User Requests to Be Host** → Submit host request
+5. **Admin Approves Host Request** → User becomes host in "Host Verification Requests" tab
+6. **User Can Now:** Book properties + Create properties + Accept bookings
+7. **Bookings Blocked Without:** KYC Verified = KYC_NOT_VERIFIED error code
+8. **Bookings Blocked Without:** Payment Verified = PAYMENT_NOT_VERIFIED error code
+9. **Property Creation Blocked:** Without host verification = HOST_NOT_VERIFIED error code
 
-### ⚠️ Vite HMR WebSocket Error - IDENTIFIED (Non-Critical)
-- **Status:** Development-only, harmless, won't affect production
-- **What it is:** Vite's Hot Module Replacement trying to reconnect during development
-- **Impact:** Zero - app functions perfectly, no user-facing issues
-- **Production:** Won't occur after deployment to Railway
-- **Root cause:** Vite dev server reconnection attempts (expected in Replit)
+### ✅ Database Schema Updated
+- Added `hostVerificationStatus` field (none/pending/approved/rejected)
+- Added `hostVerificationReason` field (for rejection explanations)
+- Added `paymentVerified` boolean field to users table
+- All migrations applied via `npm run db:push`
+
+### ✅ Admin Dashboard Enhanced
+- New "Host Verification Requests" tab for approving hosts
+- New "Payment Method Verification" tab for payment approval
+- Shows KYC status + Payment status + Host status for each user
+- One-click approval/rejection buttons with audit logging
 
 ---
 

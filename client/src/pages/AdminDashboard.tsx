@@ -325,6 +325,88 @@ function ActivityView() {
   );
 }
 
+// Host Verification View
+function HostVerificationView() {
+  const { data: hosts, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/host-verification-requests'],
+  });
+  const { toast } = useToast();
+
+  const verifyHostMutation = useMutation({
+    mutationFn: async ({ userId, approved, reason }: any) => {
+      await apiRequest('PATCH', `/api/admin/users/${userId}/verify-host`, {
+        approved,
+        reason: reason || '',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/host-verification-requests'] });
+      toast({ title: "Success", description: "Host verification updated" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Host Verification Requests</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Host Applications</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {hosts && hosts.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Requested</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {hosts.map((host) => (
+                  <TableRow key={host.id}>
+                    <TableCell className="font-mono text-sm">{host.email}</TableCell>
+                    <TableCell>{host.firstName} {host.lastName}</TableCell>
+                    <TableCell>{new Date(host.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="space-x-2">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => verifyHostMutation.mutate({ userId: host.id, approved: true })}
+                        disabled={verifyHostMutation.isPending}
+                        data-testid={`button-approve-host-${host.id}`}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => verifyHostMutation.mutate({ userId: host.id, approved: false, reason: 'Admin review' })}
+                        disabled={verifyHostMutation.isPending}
+                        data-testid={`button-reject-host-${host.id}`}
+                      >
+                        Reject
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-muted-foreground">No pending host verification requests</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // Payment Verification View
 function PaymentVerificationView() {
   const { data: users, isLoading } = useQuery<any[]>({
@@ -578,6 +660,7 @@ export default function AdminDashboard() {
           <main className="flex-1 overflow-auto p-6">
             {/* Show different content based on current view */}
             {(currentView === 'verification') && <PaymentVerificationView />}
+            {(currentView === 'hosts') && <HostVerificationView />}
             {(currentView === 'dashboard' || currentView === 'admin') && (
               <>
             {/* Stats Cards */}

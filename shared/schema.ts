@@ -42,6 +42,8 @@ export const users: any = pgTable("users", {
   isVerified: boolean("is_verified").default(false),
   kycVerified: boolean("kyc_verified").default(false), // ID/passport verified by admin
   paymentVerified: boolean("payment_verified").default(false), // Payment method verified
+  hostVerificationStatus: varchar("host_verification_status", { length: 20 }).default('none'), // none, pending, approved, rejected
+  hostVerificationReason: text("host_verification_reason"), // Reason for rejection if applicable
   stripeCustomerId: varchar("stripe_customer_id"),
   squareCustomerId: varchar("square_customer_id"),
   language: varchar("language", { length: 5 }).default('en'), // en, es

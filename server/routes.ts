@@ -459,6 +459,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/properties', isAuthenticated, requireRoles(ROLES.HOST, ROLES.ADMIN), async (req: any, res) => {
     try {
       const userId = req.user?.id;
+      
+      // Check if user is verified host
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      if (user.role === 'host' && user.hostVerificationStatus !== 'approved') {
+        return res.status(403).json({ 
+          message: "Cannot create property",
+          reason: `Your host account must be verified by admin before creating properties. Current status: ${user.hostVerificationStatus}`,
+          code: "HOST_NOT_VERIFIED"
+        });
+      }
 
       const validated = insertPropertySchema.parse({
         ...req.body,
@@ -1363,6 +1377,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error verifying payment:", error);
       res.status(500).json({ message: error.message || "Failed to verify payment" });
+    }
+  });
+
+  // User request to become a host
+  app.post('/api/user/request-host-status', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.id;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (user.hostVerificationStatus === 'pending') {
+        return res.status(400).json({ message: "Host verification request already pending" });
+      }
+
+      const updated = await storage.upsertUser({
+        id: userId,
+        hostVerificationStatus: 'pending',
+      });
+
+      await storage.createAuditLog({
+        userId,
+        action: 'REQUEST_HOST_STATUS',
+        entityType: 'user',
+        entityId: userId,
+        changes: { hostVerificationStatus: 'pending' }
+      });
+
+      res.json({ message: "Host verification request submitted", user: updated });
+    } catch (error: any) {
+      console.error("Error requesting host status:", error);
+      res.status(500).json({ message: error.message || "Failed to request host status" });
+    }
+  });
+
+  // Get hosts pending verification for admin
+  app.get('/api/admin/host-verification-requests', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res: any) => {
+    try {
+      const users = await storage.getUsersByRole('guest');
+      const pendingHosts = users.filter(u => u.hostVerificationStatus === 'pending');
+      res.json(pendingHosts);
+    } catch (error: any) {
+      console.error("Error fetching host requests:", error);
+      res.status(500).json({ message: "Failed to fetch host verification requests" });
+    }
+  });
+
+  // Admin approve/reject host verification
+  app.patch('/api/admin/users/:userId/verify-host', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res: any) => {
+    try {
+      const { userId } = req.params;
+      const { approved, reason } = req.body;
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const status = approved ? 'approved' : 'rejected';
+      const updated = await storage.upsertUser({
+        id: userId,
+        role: approved ? 'host' : 'guest',
+        hostVerificationStatus: status,
+        hostVerificationReason: reason,
+      });
+
+      await storage.createAuditLog({
+        userId: req.user?.id,
+        action: 'VERIFY_HOST_STATUS',
+        entityType: 'user',
+        entityId: userId,
+        changes: { status, reason }
+      });
+
+      res.json({ 
+        message: approved ? "Host verified successfully" : "Host verification rejected",
+        user: updated 
+      });
+    } catch (error: any) {
+      console.error("Error verifying host:", error);
+      res.status(500).json({ message: error.message || "Failed to verify host" });
     }
   });
 
