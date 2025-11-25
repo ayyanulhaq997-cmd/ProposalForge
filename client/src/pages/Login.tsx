@@ -80,8 +80,8 @@ export default function Login() {
         return;
       }
 
-      toast({ title: "Success", description: isSignup ? "Account created!" : "Logged in!" });
-      setLocation("/");
+      toast({ title: "Success", description: isSignup ? "Account created! Please verify your ID." : "Logged in!" });
+      setLocation(isSignup ? "/verify-required" : "/");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       setLoading(false);

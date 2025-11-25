@@ -105,9 +105,11 @@ export async function setupAuth(app: Express) {
         passwordHash: hashedPassword,
         role: "host"
       });
+      // Log user in and send to verification
       req.login(user, (err: Error | null) => {
         if (err) return res.status(500).json({ message: "Login failed" });
-        res.json({ user });
+        // Frontend will redirect to /verify-required - ID verification is mandatory
+        res.json({ user, requiresVerification: true });
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message });

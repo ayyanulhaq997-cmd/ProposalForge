@@ -27,6 +27,7 @@ import ProfileManagement from "@/pages/ProfileManagement";
 import Login from "@/pages/Login";
 import Blog from "@/pages/Blog";
 import VerificationStatus from "@/pages/VerificationStatus";
+import VerificationRequired from "@/pages/VerificationRequired";
 
 function Router() {
   const { isAuthenticated, isLoading, isAdmin, isHost } = useAuth();
@@ -35,6 +36,7 @@ function Router() {
     <Switch>
       {/* Auth routes */}
       <Route path="/login" component={Login} />
+      <Route path="/verify-required" component={VerificationRequired} />
 
       {/* Landing page for unauthenticated users */}
       <Route path="/landing" component={Landing} />
