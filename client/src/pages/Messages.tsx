@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Send, Loader2, MessageSquare, AlertCircle } from "lucide-react";
+import { Send, Loader2, MessageSquare } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,63 +174,68 @@ export default function Messages() {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {chatMessages.map((msg) => (
+          <ScrollArea className="flex-1 p-4 space-y-4">
+            {messages?.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-3 mb-4 ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
+              >
+                {message.senderId !== user?.id && (
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarFallback className="bg-primary/20 text-primary text-xs">H</AvatarFallback>
+                  </Avatar>
+                )}
                 <div
-                  key={msg.id}
-                  className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`rounded-2xl px-4 py-2 max-w-xs break-words ${
+                    message.senderId === user?.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground'
+                  }`}
+                  data-testid={message.senderId === user?.id ? 'text-user-message' : 'text-host-message'}
                 >
-                  {msg.role === 'assistant' && (
-                    <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                        AI
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} max-w-sm`}>
-                    <div
-                      className={`rounded-2xl px-4 py-2 break-words ${
-                        msg.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground'
-                      }`}
-                      data-testid={msg.role === 'user' ? 'text-user-message' : 'text-assistant-message'}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 </div>
-              ))}
-              <div ref={scrollRef} />
-            </div>
+              </div>
+            ))}
+            {typingUsers.size > 0 && (
+              <div className="flex gap-2 mb-4">
+                <Avatar className="h-8 w-8 flex-shrink-0">
+                  <AvatarFallback className="bg-primary/20 text-primary text-xs">H</AvatarFallback>
+                </Avatar>
+                <div className="bg-muted px-4 py-2 rounded-2xl flex gap-1 items-center">
+                  <span className="animate-bounce w-2 h-2 bg-foreground rounded-full"></span>
+                  <span className="animate-bounce w-2 h-2 bg-foreground rounded-full" style={{animationDelay: '0.1s'}}></span>
+                  <span className="animate-bounce w-2 h-2 bg-foreground rounded-full" style={{animationDelay: '0.2s'}}></span>
+                </div>
+              </div>
+            )}
+            <div ref={scrollRef} />
           </ScrollArea>
 
           {/* Input Area */}
           <div className="p-4 border-t">
-            <div className="flex gap-2 items-end">
+            <div className="flex gap-2">
               <Input
-                placeholder="Type your message... Ask about properties, bookings, or anything!"
+                placeholder="Type your message..."
                 value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
+                onChange={(e) => {
+                  setMessageText(e.target.value);
+                  handleTyping();
+                }}
                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                disabled={sendMessageMutation.isPending}
-                className="flex-1"
+                disabled={sendMessageMutation.isPending || !conversationId}
                 data-testid="input-chat-message"
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={sendMessageMutation.isPending || !messageText.trim()}
+                disabled={!messageText.trim() || sendMessageMutation.isPending || !conversationId}
                 size="icon"
                 data-testid="button-send-chat"
               >
                 {sendMessageMutation.isPending ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Send className="h-5 w-5" />
+                  <Send className="h-4 w-4" />
                 )}
               </Button>
             </div>
