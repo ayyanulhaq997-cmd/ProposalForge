@@ -5,10 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { HostDashboardLayout } from "@/components/HostDashboardLayout";
+import CreateProperty from "./CreateProperty";
 import type { Property } from "@shared/schema";
 
 function DashboardHome() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  
+  // Show create property form if navigating to /host/properties/new
+  if (location.includes("/properties/new") || location.includes("/properties/new/")) {
+    return <CreateProperty />;
+  }
   const { data: stats, isLoading, error: statsError } = useQuery<any>({
     queryKey: ['/api/host/stats'],
   });
