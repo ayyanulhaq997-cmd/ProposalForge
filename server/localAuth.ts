@@ -103,7 +103,7 @@ export async function setupAuth(app: Express) {
         firstName: firstName || "",
         lastName: lastName || "",
         passwordHash: hashedPassword,
-        role: "guest"
+        role: "host"
       });
       req.login(user, (err: Error | null) => {
         if (err) return res.status(500).json({ message: "Login failed" });

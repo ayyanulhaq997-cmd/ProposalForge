@@ -455,8 +455,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create property (ADMIN ONLY)
-  app.post('/api/properties', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res) => {
+  // Create property (HOST or ADMIN)
+  app.post('/api/properties', isAuthenticated, requireRoles(ROLES.HOST, ROLES.ADMIN), async (req: any, res) => {
     try {
       const userId = req.user?.id;
 
@@ -878,6 +878,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error sending message:", error);
       res.status(400).json({ message: error.message || "Failed to send message" });
+    }
+  });
+
+  // ============================================================================
+  // ADMIN ROUTES - HOST MANAGEMENT
+  // ============================================================================
+
+  // Get all hosts (ADMIN ONLY)
+  app.get('/api/admin/hosts', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res) => {
+    try {
+      const hosts = await storage.getUsersByRole('host');
+      
+      // Get additional stats for each host
+      const hostsWithStats = await Promise.all(
+        hosts.map(async (host) => {
+          const properties = await storage.getProperties({ hostId: host.id });
+          const stats = await storage.getHostStats(host.id);
+          return {
+            ...host,
+            propertyCount: properties.length,
+            stats: stats
+          };
+        })
+      );
+
+      res.json(hostsWithStats);
+    } catch (error) {
+      console.error("Error fetching hosts:", error);
+      res.status(500).json({ message: "Failed to fetch hosts" });
     }
   });
 
