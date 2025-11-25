@@ -517,6 +517,184 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete property (HOST or ADMIN)
+  app.delete('/api/properties/:id', isAuthenticated, requireRoles(ROLES.HOST, ROLES.ADMIN), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const property = await storage.getProperty(req.params.id);
+
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      // Hosts can only delete their own properties, admins can delete any
+      if (property.hostId !== userId && req.userRole !== ROLES.ADMIN) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      await storage.deleteProperty(req.params.id);
+
+      await storage.createAuditLog({
+        userId,
+        action: 'DELETE_PROPERTY',
+        entityType: 'property',
+        entityId: req.params.id,
+        changes: { deletedPropertyId: req.params.id }
+      });
+
+      res.json({ message: "Property deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting property:", error);
+      res.status(500).json({ message: error.message || "Failed to delete property" });
+    }
+  });
+
+  // Set property calendar/availability
+  app.post('/api/properties/:id/availability', isAuthenticated, requireRoles(ROLES.HOST, ROLES.ADMIN), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const property = await storage.getProperty(req.params.id);
+
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      if (property.hostId !== userId && req.userRole !== ROLES.ADMIN) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { startDate, endDate, available } = req.body;
+
+      const availability = await storage.setAvailability({
+        propertyId: req.params.id,
+        startDate,
+        endDate,
+        available: available !== false // default to true
+      });
+
+      await storage.createAuditLog({
+        userId,
+        action: 'UPDATE_AVAILABILITY',
+        entityType: 'property',
+        entityId: req.params.id,
+        changes: { startDate, endDate, available }
+      });
+
+      res.json(availability);
+    } catch (error: any) {
+      console.error("Error setting availability:", error);
+      res.status(400).json({ message: error.message || "Failed to set availability" });
+    }
+  });
+
+  // Get property calendar
+  app.get('/api/properties/:id/availability', async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "startDate and endDate required" });
+      }
+
+      const availability = await storage.getAvailabilityForProperty(req.params.id, startDate, endDate);
+      res.json(availability);
+    } catch (error: any) {
+      console.error("Error fetching availability:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch availability" });
+    }
+  });
+
+  // Update pricing (base price and fees)
+  app.patch('/api/properties/:id/pricing', isAuthenticated, requireRoles(ROLES.HOST, ROLES.ADMIN), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const property = await storage.getProperty(req.params.id);
+
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      if (property.hostId !== userId && req.userRole !== ROLES.ADMIN) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { pricePerNight, cleaningFee, serviceFee, taxRate, weekendPriceMultiplier } = req.body;
+
+      const updated = await storage.updateProperty(req.params.id, {
+        pricePerNight: pricePerNight?.toString(),
+        cleaningFee: cleaningFee?.toString(),
+        serviceFee: serviceFee?.toString(),
+        taxRate: taxRate?.toString(),
+        weekendPriceMultiplier: weekendPriceMultiplier?.toString()
+      });
+
+      await storage.createAuditLog({
+        userId,
+        action: 'UPDATE_PRICING',
+        entityType: 'property',
+        entityId: req.params.id,
+        changes: req.body
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating pricing:", error);
+      res.status(400).json({ message: error.message || "Failed to update pricing" });
+    }
+  });
+
+  // Create seasonal pricing rule
+  app.post('/api/properties/:id/seasonal-pricing', isAuthenticated, requireRoles(ROLES.HOST, ROLES.ADMIN), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const property = await storage.getProperty(req.params.id);
+
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      if (property.hostId !== userId && req.userRole !== ROLES.ADMIN) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { name, seasonName, startDate, endDate, pricePerNight, multiplier } = req.body;
+
+      const pricing = await storage.createSeasonalPricing({
+        propertyId: req.params.id,
+        name,
+        seasonName,
+        startDate,
+        endDate,
+        pricePerNight: pricePerNight?.toString(),
+        multiplier: multiplier?.toString() || '1.0'
+      });
+
+      await storage.createAuditLog({
+        userId,
+        action: 'CREATE_SEASONAL_PRICING',
+        entityType: 'property',
+        entityId: req.params.id,
+        changes: req.body
+      });
+
+      res.status(201).json(pricing);
+    } catch (error: any) {
+      console.error("Error creating seasonal pricing:", error);
+      res.status(400).json({ message: error.message || "Failed to create seasonal pricing" });
+    }
+  });
+
+  // Get seasonal pricing rules
+  app.get('/api/properties/:id/seasonal-pricing', async (req: any, res) => {
+    try {
+      const pricing = await storage.getSeasonalPricingForProperty(req.params.id);
+      res.json(pricing);
+    } catch (error: any) {
+      console.error("Error fetching seasonal pricing:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch seasonal pricing" });
+    }
+  });
+
   // ============================================================================
   // BOOKING ROUTES
   // ============================================================================
