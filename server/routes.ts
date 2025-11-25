@@ -1169,7 +1169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Don't expose sensitive data
       const { ...publicUser } = user;
       res.json(publicUser);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
