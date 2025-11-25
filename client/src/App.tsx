@@ -56,12 +56,8 @@ function Router() {
       <Route path="/host-profile/:hostId" component={HostProfile} />
 
       {/* Host routes - admins can also access */}
-      {(isHost || isAdmin) && (
-        <>
-          <Route path="/host" component={HostDashboard} />
-          <Route path="/host/:rest*" component={HostDashboard} />
-        </>
-      )}
+      <Route path="/host" component={HostDashboard} />
+      <Route path="/host/:rest*" component={HostDashboard} />
 
       {/* Admin routes - accessible if authenticated and admin */}
       <Route path="/admin" component={AdminDashboard} />
