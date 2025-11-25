@@ -11,10 +11,37 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export function PublicHeader() {
   const { user, isAuthenticated, isAdmin, isHost } = useAuth();
   const [location, navigate] = useLocation();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      const response: any = await apiRequest('GET', '/api/logout');
+      
+      // Invalidate auth cache so app knows user is logged out
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      
+      // Show success message
+      toast({
+        title: "Logged out",
+        description: response?.message || "You have been successfully logged out",
+      });
+      
+      // Redirect to homepage after a brief delay to show toast
+      setTimeout(() => navigate("/"), 500);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to logout",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
     if (!firstName && !lastName) return "U";
@@ -118,7 +145,7 @@ export function PublicHeader() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/messages")} data-testid="link-messages-menu">Messages</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => window.location.href = "/api/logout"} data-testid="button-logout">
+                    <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
                       Log out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
