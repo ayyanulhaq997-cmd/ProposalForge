@@ -1309,6 +1309,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all users for admin verification (KYC & Payment status)
+  app.get('/api/admin/users-for-verification', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res: any) => {
+    try {
+      const users = await storage.getUsersByRole('guest');
+      const usersWithVerification = await Promise.all(
+        users.map(async (user) => {
+          const idVerification = await storage.getIdVerification(user.id);
+          return {
+            ...user,
+            kycStatus: idVerification?.status || 'pending',
+            kycVerified: idVerification?.status === 'verified',
+            paymentVerified: user.paymentVerified || false,
+          };
+        })
+      );
+      res.json(usersWithVerification);
+    } catch (error: any) {
+      console.error("Error fetching users for verification:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Admin approve payment method for user
+  app.patch('/api/admin/users/:userId/verify-payment', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res: any) => {
+    try {
+      const { userId } = req.params;
+      const { paymentVerified } = req.body;
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const updated = await storage.upsertUser({
+        id: userId,
+        paymentVerified: Boolean(paymentVerified),
+      });
+
+      // Log the action
+      await storage.createAuditLog({
+        userId: req.user?.id,
+        action: 'VERIFY_PAYMENT_METHOD',
+        entityType: 'user',
+        entityId: userId,
+        changes: { paymentVerified: Boolean(paymentVerified) }
+      });
+
+      res.json({ 
+        message: paymentVerified ? "Payment method verified" : "Payment method unverified",
+        user: updated 
+      });
+    } catch (error: any) {
+      console.error("Error verifying payment:", error);
+      res.status(500).json({ message: error.message || "Failed to verify payment" });
+    }
+  });
+
   // Admin impersonate user (admin)
   app.post('/api/admin/impersonate/:userId', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res) => {
     try {

@@ -325,6 +325,101 @@ function ActivityView() {
   );
 }
 
+// Payment Verification View
+function PaymentVerificationView() {
+  const { data: users, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/users-for-verification'],
+  });
+  const { toast } = useToast();
+
+  const verifyPaymentMutation = useMutation({
+    mutationFn: async ({ userId, verified }: any) => {
+      await apiRequest('PATCH', `/api/admin/users/${userId}/verify-payment`, {
+        paymentVerified: verified,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users-for-verification'] });
+      toast({ title: "Success", description: "Payment verification updated" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Payment Method Verification</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Users Requiring Payment Verification</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {users && users.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>KYC Status</TableHead>
+                  <TableHead>Payment Verified</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-mono text-sm">{user.email}</TableCell>
+                    <TableCell>{user.firstName} {user.lastName}</TableCell>
+                    <TableCell>
+                      <Badge variant={user.kycVerified ? "default" : "secondary"}>
+                        {user.kycStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={user.paymentVerified ? "default" : "outline"}>
+                        {user.paymentVerified ? "✓ Verified" : "✗ Pending"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {!user.paymentVerified && user.kycVerified ? (
+                        <Button
+                          size="sm"
+                          onClick={() => verifyPaymentMutation.mutate({ userId: user.id, verified: true })}
+                          disabled={verifyPaymentMutation.isPending}
+                          data-testid={`button-verify-payment-${user.id}`}
+                        >
+                          Verify Payment
+                        </Button>
+                      ) : user.paymentVerified ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => verifyPaymentMutation.mutate({ userId: user.id, verified: false })}
+                          disabled={verifyPaymentMutation.isPending}
+                          data-testid={`button-unverify-payment-${user.id}`}
+                        >
+                          Revoke
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Complete KYC first</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-muted-foreground">No users found</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // Settings/CMS View
 function SettingsView() {
   const [heroTitle, setHeroTitle] = React.useState("Discover Your Perfect Stay");
@@ -482,6 +577,7 @@ export default function AdminDashboard() {
 
           <main className="flex-1 overflow-auto p-6">
             {/* Show different content based on current view */}
+            {(currentView === 'verification') && <PaymentVerificationView />}
             {(currentView === 'dashboard' || currentView === 'admin') && (
               <>
             {/* Stats Cards */}
