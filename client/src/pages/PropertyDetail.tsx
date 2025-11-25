@@ -458,7 +458,22 @@ export default function PropertyDetail() {
                           <p className="text-sm text-muted-foreground">Superhost • 127 reviews</p>
                         </div>
                       </div>
-                      <Button variant="outline" data-testid="button-contact-host">
+                      <Button 
+                        variant="outline" 
+                        data-testid="button-contact-host"
+                        onClick={async () => {
+                          if (!host?.id) return;
+                          try {
+                            const response = await apiRequest('POST', '/api/conversations', {
+                              participantId: host.id
+                            });
+                            const conversation = await response.json();
+                            navigate(`/messages?conversationId=${conversation.id}`);
+                          } catch (error) {
+                            toast({ title: "Error", description: "Failed to start conversation", variant: "destructive" });
+                          }
+                        }}
+                      >
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Contact
                       </Button>
