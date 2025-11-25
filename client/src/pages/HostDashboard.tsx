@@ -9,22 +9,47 @@ import type { Property } from "@shared/schema";
 
 function DashboardHome() {
   const [, navigate] = useLocation();
-  const { data: stats, isLoading } = useQuery<any>({
+  const { data: stats, isLoading, error: statsError } = useQuery<any>({
     queryKey: ['/api/host/stats'],
   });
 
-  const { data: properties } = useQuery<Property[]>({
+  const { data: properties, error: propertiesError } = useQuery<Property[]>({
     queryKey: ['/api/host/properties'],
   });
 
-  const { data: bookings } = useQuery<any[]>({
+  const { data: bookings, error: bookingsError } = useQuery<any[]>({
     queryKey: ['/api/host/bookings'],
   });
+
+  const error = statsError || propertiesError || bookingsError;
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Card className="border-destructive bg-destructive/5 max-w-md">
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold text-destructive mb-2">Error Loading Dashboard</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {error instanceof Error ? error.message : 'Failed to load host dashboard data'}
+            </p>
+            <Button 
+              onClick={() => window.location.reload()}
+              variant="outline"
+              size="sm"
+              data-testid="button-reload-dashboard"
+            >
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
