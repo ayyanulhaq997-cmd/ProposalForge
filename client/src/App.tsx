@@ -19,6 +19,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminBookings from "@/pages/AdminBookings";
 import AdminContentManager from "@/pages/AdminContentManager";
 import HostDashboard from "@/pages/HostDashboard";
+import NewProperty from "@/pages/NewProperty";
 import HostProfile from "@/pages/HostProfile";
 import UserStatsPage from "@/pages/UserStatsPage";
 import StayHistory from "@/pages/StayHistory";
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/host-profile/:hostId" component={HostProfile} />
 
       {/* Host routes - admins can also access */}
+      <Route path="/host/properties/new" component={NewProperty} />
       <Route path="/host" component={HostDashboard} />
       <Route path="/host/:rest*" component={HostDashboard} />
 
