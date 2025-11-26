@@ -335,13 +335,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return a simple client secret for payment processing
       const clientSecret = `pi_${bookingId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      await storage.createAuditLog({
-        userId: req.user?.id || 'guest',
-        action: 'PAYMENT_INTENT_CREATED',
-        entityType: 'booking',
-        entityId: bookingId,
-        changes: { amount, clientSecret, paymentGateway: 'stripe' }
-      });
+      // Log payment intent (skip for guest users to avoid FK constraint issues)
+      if (req.user?.id) {
+        try {
+          await storage.createAuditLog({
+            userId: req.user.id,
+            action: 'PAYMENT_INTENT_CREATED',
+            entityType: 'booking',
+            entityId: bookingId,
+            changes: { amount, clientSecret, paymentGateway: 'stripe' }
+          });
+        } catch (logError) {
+          console.warn('Failed to log payment intent:', logError);
+          // Continue with payment even if logging fails
+        }
+      }
 
       res.json({ 
         success: true, 
