@@ -42,6 +42,7 @@ export default function Landing() {
     <div className="min-h-screen flex flex-col">
       <PublicHeader />
 
+      <main>
       {/* Hero Section */}
       <section className="relative h-[500px] sm:h-[600px] md:h-[700px] flex items-center justify-center overflow-hidden">
         <div 
@@ -264,6 +265,7 @@ export default function Landing() {
 
       {/* Footer */}
       <Footer />
+      </main>
     </div>
   );
 }

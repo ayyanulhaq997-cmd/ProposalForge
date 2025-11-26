@@ -45,7 +45,7 @@ export default function Search() {
     <div className="min-h-screen flex flex-col bg-background">
       <PublicHeader />
 
-      <main className="flex-1">
+      <main className="flex-1" role="main">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8 transition-all duration-300 ease-in-out">
