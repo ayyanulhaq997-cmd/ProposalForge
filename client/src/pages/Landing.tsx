@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Search, Calendar, Users, MapPin, Home, Mountain, Building2, Palmtree, Heart, Loader2, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,10 +14,17 @@ import type { Property } from "@shared/schema";
 
 export default function Landing() {
   const [searchLocation, setSearchLocation] = useState("");
+  const [showAnimations, setShowAnimations] = useState(false);
   const [, navigate] = useLocation();
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ['/api/properties/search'],
   });
+
+  // Defer animations until after initial paint
+  useEffect(() => {
+    const timer = setTimeout(() => setShowAnimations(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const categories = [
     { name: "Villa", icon: Home, image: "villa" },
@@ -45,19 +52,23 @@ export default function Landing() {
       <main>
       {/* Hero Section */}
       <section className="relative h-[500px] sm:h-[600px] md:h-[700px] flex items-center justify-center overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
-        </div>
+        <img 
+          src={heroImage}
+          alt="Hero background"
+          className="absolute inset-0 w-full h-full object-cover"
+          fetchPriority="high"
+          decoding="async"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          {showAnimations ? (
+            <>
           <motion.button 
             onClick={handleChatClick}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.3 }}
             className="inline-block bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 px-4 py-2 rounded-full mb-4 text-sm font-medium hover:bg-pink-200 dark:hover:bg-pink-900/50 cursor-pointer transition-colors active-elevate-2"
             data-testid="button-chat-from-hero"
           >
@@ -68,7 +79,7 @@ export default function Landing() {
             data-testid="text-hero-title"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            transition={{ duration: 0.3, delay: 0.05 }}
           >
             <span className="text-pink-400">Experimenta</span>
           </motion.h1>
@@ -76,7 +87,7 @@ export default function Landing() {
             className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 sm:mb-8 tracking-tight"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
           >
             el lugar perfecto
           </motion.h2>
@@ -85,7 +96,7 @@ export default function Landing() {
             data-testid="text-hero-subtitle"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
           >
             Descubre alojamientos únicos y vive experiencias inolvidables en los destinos más increíbles
           </motion.p>
@@ -94,8 +105,16 @@ export default function Landing() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
           >
+            </>
+          ) : (
+            <div className="opacity-0">
+              <div className="h-10 mb-4" />
+              <div className="h-16 mb-4" />
+              <div className="h-16 mb-8" />
+            </div>
+          )}
           <Card className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-0 shadow-xl">
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row gap-3">
@@ -123,6 +142,7 @@ export default function Landing() {
             </CardContent>
           </Card>
           </motion.div>
+          </div>
         </div>
       </section>
 
