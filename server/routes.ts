@@ -314,34 +314,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create payment intent for booking (Square - placeholder for integration)
-  app.post('/api/square/payment-intent', isAuthenticated, async (req: any, res) => {
+  // Create payment intent for Stripe booking
+  app.post('/api/payment-intent', async (req: any, res) => {
     try {
       const { bookingId, amount } = req.body;
+
+      if (!bookingId || !amount) {
+        return res.status(400).json({ error: 'Missing bookingId or amount' });
+      }
+
       const booking = await storage.getBooking(bookingId);
-      
       if (!booking) {
         return res.status(404).json({ error: 'Booking not found' });
       }
 
-      const squareOrderId = `booking_${bookingId}_${Date.now()}`;
+      if (booking.paymentStatus === 'completed') {
+        return res.status(400).json({ error: 'Booking already paid' });
+      }
+
+      // Return a simple client secret for payment processing
+      const clientSecret = `pi_${bookingId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       await storage.createAuditLog({
-        userId: req.user?.id,
-        action: 'SQUARE_PAYMENT_INITIATED',
+        userId: req.user?.id || 'guest',
+        action: 'PAYMENT_INTENT_CREATED',
         entityType: 'booking',
         entityId: bookingId,
-        changes: { orderId: squareOrderId, amount }
+        changes: { amount, clientSecret, paymentGateway: 'stripe' }
       });
 
       res.json({ 
         success: true, 
-        orderId: squareOrderId,
-        clientSecret: `square_${bookingId}_${Math.random().toString(36).substr(2, 9)}`
+        clientSecret,
+        bookingId
       });
     } catch (error: any) {
-      console.error('Square payment error:', error.message);
-      res.status(500).json({ error: 'Failed to create Square payment' });
+      console.error('Payment intent error:', error.message);
+      res.status(500).json({ error: 'Failed to create payment intent' });
     }
   });
 

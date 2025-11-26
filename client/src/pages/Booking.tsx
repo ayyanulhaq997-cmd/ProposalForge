@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
-import { SquarePaymentForm } from "@/components/SquarePaymentForm";
+import { StripePaymentForm } from "@/components/StripePaymentForm";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Property } from "@shared/schema";
@@ -356,7 +356,7 @@ export default function Booking() {
 
               {/* Stripe Payment Form */}
               {step === 'payment' && isFormValid && (
-                <SquarePaymentForm
+                <StripePaymentForm
                   bookingId={bookingId}
                   total={total}
                   propertyTitle={property.title}
