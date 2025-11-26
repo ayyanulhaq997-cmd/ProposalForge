@@ -36,6 +36,8 @@ export function ImageWithFallback({
       src={src}
       alt={alt}
       className={className}
+      loading="lazy"
+      decoding="async"
       onError={() => {
         setHasError(true);
         setIsLoading(false);
@@ -75,6 +77,8 @@ export function AvatarWithFallback({
       src={src}
       alt={alt}
       className={`${className} rounded-full object-cover`}
+      loading="lazy"
+      decoding="async"
       onError={() => setHasError(true)}
     />
   );
