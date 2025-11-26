@@ -107,6 +107,33 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
           >
+            <Card className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-0 shadow-xl">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-background rounded-lg border">
+                    <MapPin className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <Input
+                      placeholder="Dónde quieres ir?"
+                      value={searchLocation}
+                      onChange={(e) => setSearchLocation(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                      data-testid="input-search-location"
+                    />
+                  </div>
+                  <Button
+                    size="lg"
+                    onClick={handleSearch}
+                    className="sm:w-auto w-full bg-pink-500 hover:bg-pink-600 text-white"
+                    data-testid="button-search"
+                  >
+                    <Search className="h-5 w-5 mr-2" />
+                    Buscar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
             </>
           ) : (
             <div className="opacity-0">
@@ -115,34 +142,6 @@ export default function Landing() {
               <div className="h-16 mb-8" />
             </div>
           )}
-          <Card className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-0 shadow-xl">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-background rounded-lg border">
-                  <MapPin className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  <Input
-                    placeholder="Dónde quieres ir?"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
-                    data-testid="input-search-location"
-                  />
-                </div>
-                <Button
-                  size="lg"
-                  onClick={handleSearch}
-                  className="sm:w-auto w-full bg-pink-500 hover:bg-pink-600 text-white"
-                  data-testid="button-search"
-                >
-                  <Search className="h-5 w-5 mr-2" />
-                  Buscar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          </motion.div>
-          </div>
         </div>
       </section>
 
