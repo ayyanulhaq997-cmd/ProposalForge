@@ -236,6 +236,15 @@
      ORGANIC ANIMATIONS & MICRO-INTERACTIONS
      ========================================== */
 
+  /* Reduce animations on mobile or low-end devices */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   @keyframes fadeInUp {
     from {
       opacity: 0;
@@ -335,14 +344,26 @@
     transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Global smooth transitions for ALL elements */
-  button, a, input, textarea, select, [role="button"] {
-    @apply transition-all duration-300;
+  /* Global smooth transitions for ALL elements - reduced on mobile */
+  @media (min-width: 1024px) {
+    button, a, input, textarea, select, [role="button"] {
+      @apply transition-all duration-300;
+    }
+
+    /* Smooth button transitions */
+    button {
+      @apply transition-all duration-300 ease-in-out;
+    }
   }
 
-  /* Smooth button transitions */
-  button {
-    @apply transition-all duration-300 ease-in-out;
+  @media (max-width: 1023px) {
+    button, a, input, textarea, select, [role="button"] {
+      @apply transition-all duration-150;
+    }
+
+    button {
+      @apply transition-all duration-150 ease-out;
+    }
   }
 
   button:hover {
