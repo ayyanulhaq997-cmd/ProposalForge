@@ -320,40 +320,67 @@
      HOVER & ELEVATION EFFECTS (ORGANIC)
      ========================================== */
 
-  /* Property Card Hover - Subtle lift & glow */
+  /* Property Card Hover - Smooth lift & glow */
+  .group {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
   .group:hover {
-    background-color: hsl(var(--primary) / 0.03) !important;
-    transition: all 200ms ease-in-out;
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px hsl(0 0% 0% / 0.12) !important;
   }
 
   .group:hover img {
-    transform: scale(1.03);
-    transition: transform 300ms ease-out;
+    transform: scale(1.05);
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Global smooth transitions for ALL elements */
+  button, a, input, textarea, select, [role="button"] {
+    @apply transition-all duration-300;
   }
 
   /* Smooth button transitions */
   button {
-    @apply transition-all duration-200;
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  button:hover {
+    transform: translateY(-1px);
   }
 
   button:active {
     transform: scale(0.98);
   }
 
+  /* Smooth link transitions */
+  a {
+    @apply transition-colors duration-300;
+  }
+
+  a:hover {
+    color: hsl(var(--primary) / 0.9);
+  }
+
+  /* Smooth input transitions */
+  input, textarea, select {
+    @apply transition-all duration-300;
+  }
+
   /* Organic hover elevation */
   .hover-elevate {
-    @apply transition-all duration-200;
+    @apply transition-all duration-300 ease-in-out;
   }
 
   .hover-elevate:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px hsl(0 0% 0% / 0.08);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px hsl(0 0% 0% / 0.12);
   }
 
   /* Active elevation (pressed state) */
   .active-elevate-2:active {
-    transform: translateY(0px) scale(0.98);
-    box-shadow: 0 2px 4px hsl(0 0% 0% / 0.04);
+    transform: translateY(0px) scale(0.97);
+    box-shadow: 0 2px 4px hsl(0 0% 0% / 0.06);
   }
 
   /* Heart and Share buttons on hover */
@@ -378,14 +405,19 @@
      CARD & SURFACE TREATMENTS
      ========================================== */
 
-  /* Soft card shadow + hover lift */
+  /* Soft card shadow + smooth hover lift */
   .card-hover {
-    @apply transition-all duration-200 rounded-lg;
+    @apply transition-all duration-300 ease-in-out rounded-lg;
   }
 
   .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px hsl(0 0% 0% / 0.1);
+    transform: translateY(-6px);
+    box-shadow: 0 24px 48px hsl(0 0% 0% / 0.15);
+  }
+
+  /* Smooth card transitions globally */
+  [class*="card"], .rounded-lg, [role="region"] {
+    @apply transition-all duration-300 ease-in-out;
   }
 
   /* Subtle gradient backgrounds */

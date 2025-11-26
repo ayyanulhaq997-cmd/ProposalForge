@@ -24,8 +24,8 @@ export default function Trips() {
     const checkOut = booking.checkOut ? new Date(booking.checkOut) : null;
 
     return (
-      <Card className="hover-elevate transition-all" data-testid={`card-booking-${booking.id}`}>
-        <CardContent className="p-6">
+      <Card className="hover-elevate transition-all duration-300 ease-in-out shadow-sm hover:shadow-lg" data-testid={`card-booking-${booking.id}`}>
+        <CardContent className="p-6 transition-all duration-300">
           <div className="flex gap-4">
             <div className="flex-1">
               <div className="flex items-start justify-between mb-2">
@@ -65,10 +65,10 @@ export default function Trips() {
                 </div>
               </div>
 
-              <div className="mt-4 flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => navigate(`/property/${booking.propertyId}`)}>View Property</Button>
+              <div className="mt-4 flex gap-2 transition-all duration-300">
+                <Button variant="outline" size="sm" onClick={() => navigate(`/property/${booking.propertyId}`)} className="transition-all duration-300">View Property</Button>
                 {booking.status === 'confirmed' && (
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="transition-all duration-300">
                     Contact Host
                   </Button>
                 )}

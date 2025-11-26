@@ -48,8 +48,8 @@ export default function Search() {
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="flex flex-col sm:flex-row gap-4 mb-8 transition-all duration-300 ease-in-out">
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3 transition-all duration-300">
               <Select
                 value={filters.category}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}
@@ -130,21 +130,23 @@ export default function Search() {
             </div>
           ) : properties && properties.length > 0 ? (
             <>
-              <div className="mb-6">
-                <p className="text-lg font-medium" data-testid="text-results-count">
+              <div className="mb-6 transition-all duration-300">
+                <p className="text-lg font-medium transition-all duration-300" data-testid="text-results-count">
                   {properties.length} {properties.length === 1 ? 'property' : 'properties'} found
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-all duration-300">
                 {properties.map((property) => (
-                  <PropertyCard key={property.id} property={property} />
+                  <div key={property.id} className="transition-all duration-300 ease-in-out">
+                    <PropertyCard property={property} />
+                  </div>
                 ))}
               </div>
             </>
           ) : (
-            <div className="text-center py-20">
-              <p className="text-xl font-medium text-muted-foreground">No properties found</p>
-              <p className="text-muted-foreground mt-2">Try adjusting your search filters</p>
+            <div className="text-center py-20 transition-all duration-300">
+              <p className="text-xl font-medium text-muted-foreground transition-all duration-300">No properties found</p>
+              <p className="text-muted-foreground mt-2 transition-all duration-300">Try adjusting your search filters</p>
             </div>
           )}
         </div>

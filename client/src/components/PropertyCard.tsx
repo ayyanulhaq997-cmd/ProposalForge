@@ -70,7 +70,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <Card
-      className="group overflow-hidden cursor-pointer transition-all duration-300 border shadow-sm hover:shadow-xl"
+      className="group overflow-hidden cursor-pointer transition-all duration-300 ease-in-out border shadow-sm hover:shadow-2xl hover:-translate-y-1"
       data-testid={`card-property-${property.id}`}
       onClick={() => (window.location.href = `/property/${property.id}`)}
     >
@@ -78,17 +78,17 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <ImageWithFallback
           src={mainImage}
           alt={property.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           fallbackClassName="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex flex-col items-center justify-center gap-3"
         />
 
         {/* Favorite Button */}
         <div
-          className={`absolute top-3 right-3 h-8 w-8 rounded-full backdrop-blur-sm transition-all duration-200 cursor-pointer flex items-center justify-center hover-elevate ${isFavorite ? 'bg-primary/90' : 'bg-white/90 dark:bg-black/50'}`}
+          className={`absolute top-3 right-3 h-8 w-8 rounded-full backdrop-blur-sm transition-all duration-300 ease-in-out cursor-pointer flex items-center justify-center hover-elevate ${isFavorite ? 'bg-primary/90' : 'bg-white/90 dark:bg-black/50'}`}
           onClick={handleFavorite}
           data-testid={`button-favorite-${property.id}`}
         >
-          <Heart className={`h-4 w-4 ${isFavorite ? 'fill-white text-white' : 'text-muted-foreground'}`} />
+          <Heart className={`h-4 w-4 transition-all duration-300 ${isFavorite ? 'fill-white text-white' : 'text-muted-foreground'}`} />
         </div>
 
         {/* Status Badge */}
