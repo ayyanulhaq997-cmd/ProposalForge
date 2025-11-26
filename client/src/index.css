@@ -177,11 +177,11 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     background-image: 
-      linear-gradient(135deg, hsl(350 87% 55% / 0.02) 0%, hsl(350 87% 55% / 0.01) 100%);
+      linear-gradient(135deg, hsl(350 87% 55% / 0.03) 0%, hsl(350 87% 55% / 0.01) 100%);
   }
 
   button {
-    @apply transition-all duration-200;
+    @apply transition-all duration-300 ease-in-out;
   }
 
   /* Organic input focus glow */
@@ -189,12 +189,17 @@
   textarea:focus,
   select:focus {
     outline: none;
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1), 0 0 0 1px hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15), 0 0 0 1px hsl(var(--primary) / 0.6);
+    border-color: hsl(var(--primary));
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Smooth page transitions */
   @media (prefers-reduced-motion: no-preference) {
     * {
+      scroll-behavior: smooth;
+    }
+    html {
       scroll-behavior: smooth;
     }
   }
