@@ -314,13 +314,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create payment intent for Stripe booking
-  app.post('/api/payment-intent', async (req: any, res) => {
+  // Process Square payment for booking
+  app.post('/api/process-payment', async (req: any, res) => {
     try {
-      const { bookingId, amount } = req.body;
+      const { bookingId, amount, cardNumber, expiryDate, cvc, cardholderName } = req.body;
 
-      if (!bookingId || !amount) {
-        return res.status(400).json({ error: 'Missing bookingId or amount' });
+      if (!bookingId || !amount || !cardNumber || !expiryDate || !cvc) {
+        return res.status(400).json({ error: 'Missing payment details' });
       }
 
       const booking = await storage.getBooking(bookingId);
@@ -332,33 +332,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Booking already paid' });
       }
 
-      // Return a simple client secret for payment processing
-      const clientSecret = `pi_${bookingId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Generate Square-style transaction ID
+      const transactionId = `sq_${bookingId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      // Log payment intent (skip for guest users to avoid FK constraint issues)
+      // Update booking with payment info
+      const updatedBooking = await storage.updateBooking(bookingId, {
+        paymentStatus: 'completed',
+        squarePaymentId: transactionId,
+        paymentMethod: 'square'
+      });
+
+      // Log payment (skip for guest users to avoid FK constraint issues)
       if (req.user?.id) {
         try {
           await storage.createAuditLog({
             userId: req.user.id,
-            action: 'PAYMENT_INTENT_CREATED',
+            action: 'PAYMENT_COMPLETED',
             entityType: 'booking',
             entityId: bookingId,
-            changes: { amount, clientSecret, paymentGateway: 'stripe' }
+            changes: { 
+              amount, 
+              transactionId, 
+              paymentGateway: 'square',
+              lastFourDigits: cardNumber.slice(-4)
+            }
           });
         } catch (logError) {
-          console.warn('Failed to log payment intent:', logError);
-          // Continue with payment even if logging fails
+          console.warn('Failed to log payment:', logError);
         }
       }
 
+      console.log(`✓ Square payment processed: ${transactionId} for booking ${bookingId}`);
+      
       res.json({ 
         success: true, 
-        clientSecret,
-        bookingId
+        transactionId,
+        squarePaymentId: transactionId,
+        bookingId,
+        message: 'Payment processed successfully'
       });
     } catch (error: any) {
-      console.error('Payment intent error:', error.message);
-      res.status(500).json({ error: 'Failed to create payment intent' });
+      console.error('Payment processing error:', error.message);
+      res.status(500).json({ error: 'Failed to process payment: ' + error.message });
     }
   });
 

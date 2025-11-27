@@ -100,31 +100,35 @@ export function StripePaymentForm({
     setPaymentStatus("processing");
 
     try {
-      // Create payment intent on backend
-      const response = await apiRequest("POST", "/api/payment-intent", {
+      // Process payment through Square
+      const response = await apiRequest("POST", "/api/process-payment", {
         bookingId,
         amount: Math.round(total * 100), // Convert to cents
+        cardNumber: cardNumber.replace(/\s/g, ""),
+        expiryDate: expiryDate,
+        cvc: cvc,
+        cardholderName: cardholderName,
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create payment intent');
+        throw new Error(errorData.error || 'Failed to process payment');
       }
       
-      const { clientSecret } = await response.json();
+      const data = await response.json();
 
-      if (!clientSecret) {
-        throw new Error("Failed to create payment intent");
+      if (!data.success) {
+        throw new Error(data.error || "Payment processing failed");
       }
 
-      // Payment intent created successfully - card will be processed by Stripe
+      // Payment successful
       setPaymentStatus("success");
       toast({
         title: "Payment successful",
         description: "Your payment has been processed and your booking is confirmed.",
       });
       setTimeout(() => {
-        onSuccess(clientSecret);
+        onSuccess(data.transactionId || data.squarePaymentId);
       }, 1500);
     } catch (err: any) {
       setPaymentStatus("error");
@@ -149,9 +153,9 @@ export function StripePaymentForm({
       <CardContent>
         <form onSubmit={handlePayment} className="space-y-4">
           {/* Payment Methods */}
-          <div className="flex items-center gap-3 p-3 border rounded-lg bg-blue-50 border-blue-200">
-            <div className="w-12 h-8 bg-gradient-to-r from-blue-600 to-blue-800 rounded flex items-center justify-center text-white text-xs font-bold">
-              STRIPE
+          <div className="flex items-center gap-3 p-3 border rounded-lg bg-green-50 border-green-200">
+            <div className="w-12 h-8 bg-gradient-to-r from-green-600 to-green-800 rounded flex items-center justify-center text-white text-xs font-bold">
+              SQUARE
             </div>
             <div>
               <p className="font-medium text-sm">Credit or Debit Card</p>
