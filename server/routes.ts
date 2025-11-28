@@ -20,16 +20,38 @@ async function seedProperties() {
     
     console.log('Seeding test data...');
     
-    // Create admin user first
+    // Create test users
     const bcrypt = require('bcrypt');
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const adminHash = await bcrypt.hash('admin123', 10);
+    const hostHash = await bcrypt.hash('password123', 10);
+    const guestHash = await bcrypt.hash('password123', 10);
+    
     const adminUser = await storage.upsertUser({
       id: 'admin-seed-user',
       email: 'admin@stayhub.test',
       firstName: 'Admin',
       lastName: 'Host',
-      passwordHash: hashedPassword,
+      passwordHash: adminHash,
       role: 'admin'
+    });
+    
+    const hostUser = await storage.upsertUser({
+      id: 'host-seed-user',
+      email: 'host@example.com',
+      firstName: 'Test',
+      lastName: 'Host',
+      passwordHash: hostHash,
+      role: 'host',
+      hostVerificationStatus: 'approved'
+    });
+    
+    const guestUser = await storage.upsertUser({
+      id: 'guest-seed-user',
+      email: 'user@example.com',
+      firstName: 'Test',
+      lastName: 'Guest',
+      passwordHash: guestHash,
+      role: 'guest'
     });
     
     const testProps = [
