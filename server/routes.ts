@@ -15,12 +15,7 @@ import { MediaService } from "./mediaService";
 // Seed test properties
 async function seedProperties() {
   try {
-    const existing = await storage.getFeaturedProperties(1);
-    if (existing.length > 0) return;
-    
-    console.log('Seeding test data...');
-    
-    // Create test users
+    // Always create test users first (before checking properties)
     const bcrypt = require('bcrypt');
     const adminHash = await bcrypt.hash('admin123', 10);
     const hostHash = await bcrypt.hash('password123', 10);
@@ -53,6 +48,12 @@ async function seedProperties() {
       passwordHash: guestHash,
       role: 'guest'
     });
+    
+    console.log('✓ Seeded test users');
+    
+    // Check if properties already exist - only seed properties once
+    const existing = await storage.getFeaturedProperties(1);
+    if (existing.length > 0) return;
     
     const testProps = [
       { hostId: adminUser.id, title: 'Beachfront Paradise Villa', description: 'Beautiful beachfront villa with stunning ocean views', location: 'Malibu, California', category: 'beachfront', propertyType: 'villa', guests: 6, beds: 3, bedrooms: 3, bathrooms: 2, pricePerNight: '250', cleaningFee: '50', serviceFee: '25', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad1%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%2387CEEB;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%2320B2AA;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad1)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EBeachfront Villa%3C/text%3E%3C/svg%3E'], amenities: ['WiFi', 'Pool', 'Beach'], status: 'active', isActive: true },
