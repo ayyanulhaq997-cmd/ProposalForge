@@ -492,18 +492,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
       
-      // Check if user is verified host
+      // Check if user exists
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(401).json({ message: "User not found" });
-      }
-      
-      if (user.role === 'host' && user.hostVerificationStatus !== 'approved') {
-        return res.status(403).json({ 
-          message: "Cannot create property",
-          reason: `Your host account must be verified by admin before creating properties. Current status: ${user.hostVerificationStatus}`,
-          code: "HOST_NOT_VERIFIED"
-        });
       }
 
       const validated = insertPropertySchema.parse({
