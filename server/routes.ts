@@ -2,6 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import bcrypt from "bcrypt";
 import { runMigrations } from 'stripe-replit-sync';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./localAuth";
@@ -16,7 +17,6 @@ import { MediaService } from "./mediaService";
 async function seedProperties() {
   try {
     // Always create test users first (before checking properties)
-    const bcrypt = require('bcrypt');
     const adminHash = await bcrypt.hash('admin123', 10);
     const hostHash = await bcrypt.hash('password123', 10);
     const guestHash = await bcrypt.hash('password123', 10);
