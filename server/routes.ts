@@ -4,6 +4,8 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import bcrypt from "bcrypt";
 import { runMigrations } from 'stripe-replit-sync';
+import { migrate } from 'drizzle-orm/neon-serverless/migrator';
+import { db, pool } from "./db";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./localAuth";
 import { requireRoles, ROLES } from "./rolesGuard";
@@ -128,6 +130,63 @@ async function initStripe() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Run database migrations to create tables
+  try {
+    console.log('Running database migrations...');
+    await migrate(db, { migrationsFolder: './drizzle' });
+    console.log('✓ Database migrations completed');
+  } catch (migrationError: any) {
+    console.error('Migration error (this may be normal on first run):', migrationError.message);
+    // Try to create tables from schema if migration folder doesn't exist
+    try {
+      console.log('Attempting to create tables from schema...');
+      // For Neon serverless, we need to use raw SQL to create tables
+      // This is a fallback if migrations don't work
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          "firstName" TEXT,
+          "lastName" TEXT,
+          "passwordHash" TEXT,
+          role TEXT DEFAULT 'guest',
+          "hostVerificationStatus" TEXT DEFAULT 'pending',
+          "idVerificationStatus" TEXT DEFAULT 'pending',
+          "paymentMethodVerificationStatus" TEXT DEFAULT 'pending',
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE TABLE IF NOT EXISTS properties (
+          id TEXT PRIMARY KEY,
+          "hostId" TEXT NOT NULL,
+          title TEXT NOT NULL,
+          description TEXT,
+          location TEXT,
+          category TEXT,
+          "propertyType" TEXT,
+          guests INTEGER,
+          beds INTEGER,
+          bedrooms INTEGER,
+          bathrooms INTEGER,
+          "pricePerNight" TEXT,
+          "cleaningFee" TEXT,
+          "serviceFee" TEXT,
+          "taxRate" TEXT,
+          images TEXT[],
+          amenities TEXT[],
+          status TEXT DEFAULT 'active',
+          "isActive" BOOLEAN DEFAULT true,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✓ Tables created from schema');
+    } catch (tableError: any) {
+      console.warn('Could not create tables:', tableError.message);
+    }
+  }
+
   // Seed test properties
   seedProperties().catch((err) => {
     console.error('Property seeding failed:', err);
