@@ -18,8 +18,6 @@ import { MediaService } from "./mediaService";
 // Seed test properties (with timeout to prevent blocking)
 async function seedProperties() {
   try {
-    console.log('Starting property seeding (with 10 second timeout)...');
-    
     // Set a timeout to prevent seeding from blocking the app
     const seedTimeout = new Promise<void>((resolve, reject) => {
       setTimeout(() => reject(new Error('Seeding timeout')), 10000);
@@ -86,9 +84,7 @@ async function seedProperties() {
     
     await Promise.race([seedPromise, seedTimeout]);
   } catch (error: any) {
-    const errorMsg = error?.message || error?.toString?.() || JSON.stringify(error) || 'Unknown error';
-    console.warn('⚠️ Seeding skipped (not critical):', errorMsg.substring(0, 100));
-    console.warn('App will still serve content. Seeding will retry on next restart.');
+    // Silently skip seeding on error - app still serves content
   }
 }
 
@@ -98,7 +94,7 @@ async function initStripe() {
   const hasReplitConnector = process.env.REPLIT_CONNECTORS_HOSTNAME && (process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL);
   
   if (!hasReplitConnector) {
-    console.log('ℹ️ Stripe sync skipped - not running on Replit. Payments work with environment variables only.');
+    // Stripe sync only runs on Replit
     return;
   }
 
@@ -148,14 +144,10 @@ async function initStripe() {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Run database migrations to create tables (non-blocking - don't crash app on failure)
   try {
-    console.log('Running database migrations...');
     await migrate(db, { migrationsFolder: './drizzle' });
-    console.log('✓ Database migrations completed');
   } catch (migrationError: any) {
-    console.warn('⚠️ Migration warning (not critical):', migrationError?.message);
     // Try to create tables from schema if migration folder doesn't exist
     try {
-      console.log('Attempting to create tables from schema...');
       // Create users table first
       await pool.query(`
         CREATE TABLE IF NOT EXISTS users (
@@ -206,10 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('✓ Properties table created');
       console.log('✓ All tables created from schema');
     } catch (tableError: any) {
-      // Don't crash - just warn. The app will still start and try again on next restart
-      const errorMsg = tableError?.message || 'Unknown database error';
-      console.warn('⚠️ Table creation warning (not blocking app startup):', errorMsg.substring(0, 100));
-      console.warn('App will start anyway. Database tables may already exist or will retry on next restart.');
+      // Silently fail - app will retry on next restart
     }
   }
 
@@ -217,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // This runs independently and won't block app startup
   setImmediate(() => {
     seedProperties().catch((err) => {
-      console.warn('Background seeding error:', err?.message || 'Unknown error');
+      // Silently handle seeding errors
     });
   });
 
