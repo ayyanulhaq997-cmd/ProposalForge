@@ -1,5 +1,6 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool as NeonPool, neonConfig } from '@neondatabase/serverless';
+import { Pool as PgPool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import ws from "ws";
 import * as schema from "@shared/schema";
 
@@ -13,21 +14,26 @@ if (!databaseUrl) {
   console.warn('Please set DATABASE_URL in your environment variables.');
 }
 
-console.log('✓ Using DATABASE_URL:', databaseUrl ? 'Connection string present' : 'NOT SET (using fallback)');
-
-// Handle database connections - support both Neon and standard PostgreSQL (like Railway)
+// Detect if using Neon or standard PostgreSQL
+const isNeonUrl = databaseUrl?.includes('neon.tech');
 const connectionString = databaseUrl || 'postgresql://localhost/fallback';
-const connectionConfig: any = { 
-  connectionString,
-  max: 5,
-  idleTimeoutMillis: 10000,
-  connectionTimeoutMillis: 5000,
-};
 
-// Always disable SSL certificate verification to support Railway, Neon, and other services
-// This works for both private internal connections and standard PostgreSQL
-connectionConfig.ssl = { rejectUnauthorized: false };
+// Create appropriate pool based on database type
+let pool: any;
+if (isNeonUrl) {
+  // Use Neon serverless client for Neon databases
+  pool = new NeonPool({ connectionString });
+} else {
+  // Use standard pg client for Railway and other standard PostgreSQL
+  pool = new PgPool({
+    connectionString,
+    max: 5,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 5000,
+    ssl: { rejectUnauthorized: false }
+  });
+}
 
-export const pool = new Pool(connectionConfig);
+export { pool };
 
 export const db = drizzle({ client: pool, schema });
