@@ -140,8 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Try to create tables from schema if migration folder doesn't exist
     try {
       console.log('Attempting to create tables from schema...');
-      // For Neon serverless, we need to use raw SQL to create tables
-      // This is a fallback if migrations don't work
+      // Create users table first
       await pool.query(`
         CREATE TABLE IF NOT EXISTS users (
           id TEXT PRIMARY KEY,
@@ -155,8 +154,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "paymentMethodVerificationStatus" TEXT DEFAULT 'pending',
           "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        
+        )
+      `);
+      console.log('✓ Users table created');
+      
+      // Create properties table
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS properties (
           id TEXT PRIMARY KEY,
           "hostId" TEXT NOT NULL,
@@ -179,11 +182,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "isActive" BOOLEAN DEFAULT true,
           "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
+        )
       `);
-      console.log('✓ Tables created from schema');
+      console.log('✓ Properties table created');
+      console.log('✓ All tables created from schema');
     } catch (tableError: any) {
-      console.warn('Could not create tables:', tableError.message);
+      console.error('Could not create tables:', tableError.message || tableError.toString());
+      console.error('Full error:', JSON.stringify(tableError, null, 2));
     }
   }
 
