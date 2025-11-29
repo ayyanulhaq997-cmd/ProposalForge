@@ -8,17 +8,19 @@ neonConfig.webSocketConstructor = ws;
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  console.error('❌ FATAL: DATABASE_URL not set!');
-  console.error('Make sure DATABASE_URL is in your environment variables.');
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
-  }
+  console.warn('⚠️ WARNING: DATABASE_URL not set!');
+  console.warn('App will start but database operations may fail.');
+  console.warn('Please set DATABASE_URL in your environment variables.');
 }
 
-console.log('✓ Using DATABASE_URL:', databaseUrl ? 'Connection string present' : 'MISSING');
+console.log('✓ Using DATABASE_URL:', databaseUrl ? 'Connection string present' : 'NOT SET (using fallback)');
 
 export const pool = new Pool({ 
-  connectionString: databaseUrl || 'postgresql://localhost/fallback'
+  connectionString: databaseUrl || 'postgresql://localhost/fallback',
+  // Connection pool settings for better stability
+  max: 5,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 5000,
 });
 
 export const db = drizzle({ client: pool, schema });
