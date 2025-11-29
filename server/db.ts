@@ -15,7 +15,7 @@ if (!databaseUrl) {
 
 console.log('✓ Using DATABASE_URL:', databaseUrl ? 'Connection string present' : 'NOT SET (using fallback)');
 
-// Handle Railway SSL certificate issues by disabling verification for private connections
+// Handle database connections - support both Neon and standard PostgreSQL (like Railway)
 const connectionString = databaseUrl || 'postgresql://localhost/fallback';
 const connectionConfig: any = { 
   connectionString,
@@ -24,10 +24,9 @@ const connectionConfig: any = {
   connectionTimeoutMillis: 5000,
 };
 
-// For Railway and other external services, disable SSL certificate verification
-if (connectionString.includes('railway.internal') || connectionString.includes('neon.tech')) {
-  connectionConfig.ssl = { rejectUnauthorized: false };
-}
+// Always disable SSL certificate verification to support Railway, Neon, and other services
+// This works for both private internal connections and standard PostgreSQL
+connectionConfig.ssl = { rejectUnauthorized: false };
 
 export const pool = new Pool(connectionConfig);
 
