@@ -169,6 +169,85 @@ const fallbackProperties: Property[] = [
   } as Property,
 ];
 
+// Fallback test bookings for offline database
+const fallbackBookings: Booking[] = [
+  {
+    id: 'booking-1',
+    propertyId: 'prop-1',
+    hostId: 'host@example.com',
+    guestId: 'user@example.com',
+    guestName: 'John Doe',
+    guestEmail: 'user@example.com',
+    checkIn: '2025-12-15',
+    checkOut: '2025-12-20',
+    guests: 4,
+    totalPrice: '1500',
+    basePrice: '1250',
+    cleaningFee: '150',
+    serviceFee: '100',
+    tax: '100',
+    status: 'confirmed',
+    paymentStatus: 'paid',
+    specialRequests: 'Late checkout requested',
+    cancellationPolicy: 'flexible',
+    createdAt: new Date('2025-11-25'),
+    updatedAt: new Date('2025-11-25'),
+    confirmedAt: new Date('2025-11-25'),
+    cancelledAt: null,
+    notes: 'Guest arriving 3pm',
+  } as Booking,
+  {
+    id: 'booking-2',
+    propertyId: 'prop-2',
+    hostId: 'host@example.com',
+    guestId: 'guest@test.com',
+    guestName: 'Jane Smith',
+    guestEmail: 'guest@test.com',
+    checkIn: '2025-12-22',
+    checkOut: '2025-12-27',
+    guests: 2,
+    totalPrice: '1080',
+    basePrice: '900',
+    cleaningFee: '100',
+    serviceFee: '80',
+    tax: '80',
+    status: 'confirmed',
+    paymentStatus: 'paid',
+    specialRequests: 'Early morning breakfast',
+    cancellationPolicy: 'flexible',
+    createdAt: new Date('2025-11-20'),
+    updatedAt: new Date('2025-11-20'),
+    confirmedAt: new Date('2025-11-20'),
+    cancelledAt: null,
+    notes: 'VIP guest',
+  } as Booking,
+  {
+    id: 'booking-3',
+    propertyId: 'prop-3',
+    hostId: 'host@example.com',
+    guestId: 'tourist@example.com',
+    guestName: 'Mike Johnson',
+    guestEmail: 'tourist@example.com',
+    checkIn: '2026-01-05',
+    checkOut: '2026-01-10',
+    guests: 3,
+    totalPrice: '1200',
+    basePrice: '1000',
+    cleaningFee: '120',
+    serviceFee: '80',
+    tax: '100',
+    status: 'pending',
+    paymentStatus: 'pending',
+    specialRequests: 'Business trip',
+    cancellationPolicy: 'moderate',
+    createdAt: new Date('2025-11-28'),
+    updatedAt: new Date('2025-11-28'),
+    confirmedAt: null,
+    cancelledAt: null,
+    notes: 'Awaiting payment confirmation',
+  } as Booking,
+];
+
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
@@ -530,7 +609,8 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(bookings.checkIn));
     } catch (error) {
       console.error('Error fetching host bookings:', error);
-      return [];
+      // Return fallback bookings when database is offline
+      return fallbackBookings.filter(b => b.hostId === hostId);
     }
   }
 
