@@ -109,7 +109,16 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser(async (id: string, done: (err: Error | null, user?: any) => void) => {
     try {
       const user = await storage.getUser(id);
-      done(null, user);
+      if (user) {
+        return done(null, user);
+      }
+      // User not found in database, try fallback
+      const testUser = testUsers[id];
+      if (testUser) {
+        return done(null, testUser);
+      }
+      // No user found
+      return done(null, false);
     } catch (error) {
       console.error('Deserialize user error:', error);
       // Fallback to test users if database error
@@ -117,7 +126,8 @@ export async function setupAuth(app: Express) {
       if (testUser) {
         return done(null, testUser);
       }
-      done(null, undefined); // Return undefined instead of error to allow app to continue
+      // Return false instead of error to allow app to continue
+      return done(null, false);
     }
   });
 
