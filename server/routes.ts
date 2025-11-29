@@ -15,70 +15,80 @@ import { WebhookHandlers } from "./webhookHandlers";
 import { PaymentService } from "./paymentService";
 import { MediaService } from "./mediaService";
 
-// Seed test properties
+// Seed test properties (with timeout to prevent blocking)
 async function seedProperties() {
   try {
-    console.log('Starting property seeding...');
-    // Always create test users first (before checking properties)
-    const adminHash = await bcrypt.hash('admin123', 10);
-    const hostHash = await bcrypt.hash('password123', 10);
-    const guestHash = await bcrypt.hash('password123', 10);
+    console.log('Starting property seeding (with 10 second timeout)...');
     
-    const adminUser = await storage.upsertUser({
-      id: 'admin-seed-user',
-      email: 'admin@stayhub.test',
-      firstName: 'Admin',
-      lastName: 'Host',
-      passwordHash: adminHash,
-      role: 'admin'
+    // Set a timeout to prevent seeding from blocking the app
+    const seedTimeout = new Promise<void>((resolve, reject) => {
+      setTimeout(() => reject(new Error('Seeding timeout')), 10000);
     });
     
-    const hostUser = await storage.upsertUser({
-      id: 'host-seed-user',
-      email: 'host@example.com',
-      firstName: 'Test',
-      lastName: 'Host',
-      passwordHash: hostHash,
-      role: 'host',
-      hostVerificationStatus: 'approved'
-    });
+    const seedPromise = (async () => {
+      // Always create test users first (before checking properties)
+      const adminHash = await bcrypt.hash('admin123', 10);
+      const hostHash = await bcrypt.hash('password123', 10);
+      const guestHash = await bcrypt.hash('password123', 10);
+      
+      const adminUser = await storage.upsertUser({
+        id: 'admin-seed-user',
+        email: 'admin@stayhub.test',
+        firstName: 'Admin',
+        lastName: 'Host',
+        passwordHash: adminHash,
+        role: 'admin'
+      });
+      
+      const hostUser = await storage.upsertUser({
+        id: 'host-seed-user',
+        email: 'host@example.com',
+        firstName: 'Test',
+        lastName: 'Host',
+        passwordHash: hostHash,
+        role: 'host',
+        hostVerificationStatus: 'approved'
+      });
+      
+      const guestUser = await storage.upsertUser({
+        id: 'guest-seed-user',
+        email: 'user@example.com',
+        firstName: 'Test',
+        lastName: 'Guest',
+        passwordHash: guestHash,
+        role: 'guest'
+      });
+      
+      console.log('✓ Seeded test users');
+      
+      // Check if properties already exist - only seed properties once
+      const existing = await storage.getFeaturedProperties(1);
+      if (existing.length > 0) {
+        console.log('✓ Properties already seeded');
+        return;
+      }
+      
+      const testProps = [
+        { hostId: hostUser.id, title: 'Beachfront Paradise Villa', description: 'Beautiful beachfront villa with stunning ocean views', location: 'Malibu, California', category: 'beachfront', propertyType: 'villa', guests: 6, beds: 3, bedrooms: 3, bathrooms: 2, pricePerNight: '250', cleaningFee: '50', serviceFee: '25', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad1%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%2387CEEB;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%2320B2AA;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad1)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EBeachfront Villa%3C/text%3E%3C/svg%3E'], amenities: ['WiFi', 'Pool', 'Beach'], status: 'active', isActive: true },
+        { hostId: hostUser.id, title: 'Mountain Cabin Retreat', description: 'Cozy mountain cabin with fireplace', location: 'Aspen, Colorado', category: 'mountain', propertyType: 'cabin', guests: 4, beds: 2, bedrooms: 2, bathrooms: 1, pricePerNight: '180', cleaningFee: '40', serviceFee: '18', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad2%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%238B7355;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23D2691E;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad2)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EMountain Cabin%3C/text%3E%3C/svg%3E'], amenities: ['Fireplace', 'Kitchen', 'WiFi'], status: 'active', isActive: true },
+        { hostId: adminUser.id, title: 'City Downtown Apartment', description: 'Modern apartment in downtown', location: 'New York', category: 'city', propertyType: 'apartment', guests: 2, beds: 1, bedrooms: 1, bathrooms: 1, pricePerNight: '200', cleaningFee: '30', serviceFee: '20', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad3%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%23696969;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23A9A9A9;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad3)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ECity Apartment%3C/text%3E%3C/svg%3E'], amenities: ['WiFi', 'Gym'], status: 'active', isActive: true },
+        { hostId: hostUser.id, title: 'Tropical Paradise Resort', description: 'All-inclusive tropical resort', location: 'Cancun, Mexico', category: 'tropical', propertyType: 'villa', guests: 8, beds: 4, bedrooms: 4, bathrooms: 3, pricePerNight: '350', cleaningFee: '75', serviceFee: '35', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad4%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%2332CD32;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23FFD700;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad4)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ETropical Resort%3C/text%3E%3C/svg%3E'], amenities: ['Pool', 'Beach', 'Spa'], status: 'active', isActive: true },
+        { hostId: adminUser.id, title: 'Countryside Farm House', description: 'Charming farmhouse with garden', location: 'Tuscany, Italy', category: 'countryside', propertyType: 'house', guests: 4, beds: 2, bedrooms: 2, bathrooms: 2, pricePerNight: '150', cleaningFee: '35', serviceFee: '15', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad5%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%2390EE90;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23228B22;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad5)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EFarm House%3C/text%3E%3C/svg%3E'], amenities: ['Garden', 'Kitchen'], status: 'active', isActive: true },
+        { hostId: hostUser.id, title: 'Luxury Penthouse', description: 'Ultra-modern luxury penthouse', location: 'Miami, Florida', category: 'city', propertyType: 'apartment', guests: 4, beds: 2, bedrooms: 2, bathrooms: 2, pricePerNight: '500', cleaningFee: '100', serviceFee: '50', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad6%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%23FFB6C1;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23FF69B4;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad6)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ELuxury Penthouse%3C/text%3E%3C/svg%3E'], amenities: ['Pool', 'Gym', 'WiFi'], status: 'active', isActive: true },
+        { hostId: adminUser.id, title: 'Private Beach House', description: 'Exclusive private beach house', location: 'Malibu, California', category: 'beachfront', propertyType: 'house', guests: 5, beds: 3, bedrooms: 3, bathrooms: 2, pricePerNight: '400', cleaningFee: '80', serviceFee: '40', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad7%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%23FFA500;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23FF6347;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad7)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EBeach House%3C/text%3E%3C/svg%3E'], amenities: ['Beach', 'Pool', 'WiFi'], status: 'active', isActive: true },
+      ];
+      
+      for (const prop of testProps) {
+        await storage.createProperty(prop as any);
+      }
+      console.log('✓ Seeded 7 test properties');
+    })();
     
-    const guestUser = await storage.upsertUser({
-      id: 'guest-seed-user',
-      email: 'user@example.com',
-      firstName: 'Test',
-      lastName: 'Guest',
-      passwordHash: guestHash,
-      role: 'guest'
-    });
-    
-    console.log('✓ Seeded test users');
-    
-    // Check if properties already exist - only seed properties once
-    const existing = await storage.getFeaturedProperties(1);
-    if (existing.length > 0) {
-      console.log('✓ Properties already seeded');
-      return;
-    }
-    
-    const testProps = [
-      { hostId: hostUser.id, title: 'Beachfront Paradise Villa', description: 'Beautiful beachfront villa with stunning ocean views', location: 'Malibu, California', category: 'beachfront', propertyType: 'villa', guests: 6, beds: 3, bedrooms: 3, bathrooms: 2, pricePerNight: '250', cleaningFee: '50', serviceFee: '25', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad1%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%2387CEEB;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%2320B2AA;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad1)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EBeachfront Villa%3C/text%3E%3C/svg%3E'], amenities: ['WiFi', 'Pool', 'Beach'], status: 'active', isActive: true },
-      { hostId: hostUser.id, title: 'Mountain Cabin Retreat', description: 'Cozy mountain cabin with fireplace', location: 'Aspen, Colorado', category: 'mountain', propertyType: 'cabin', guests: 4, beds: 2, bedrooms: 2, bathrooms: 1, pricePerNight: '180', cleaningFee: '40', serviceFee: '18', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad2%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%238B7355;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23D2691E;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad2)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EMountain Cabin%3C/text%3E%3C/svg%3E'], amenities: ['Fireplace', 'Kitchen', 'WiFi'], status: 'active', isActive: true },
-      { hostId: adminUser.id, title: 'City Downtown Apartment', description: 'Modern apartment in downtown', location: 'New York', category: 'city', propertyType: 'apartment', guests: 2, beds: 1, bedrooms: 1, bathrooms: 1, pricePerNight: '200', cleaningFee: '30', serviceFee: '20', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad3%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%23696969;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23A9A9A9;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad3)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ECity Apartment%3C/text%3E%3C/svg%3E'], amenities: ['WiFi', 'Gym'], status: 'active', isActive: true },
-      { hostId: hostUser.id, title: 'Tropical Paradise Resort', description: 'All-inclusive tropical resort', location: 'Cancun, Mexico', category: 'tropical', propertyType: 'villa', guests: 8, beds: 4, bedrooms: 4, bathrooms: 3, pricePerNight: '350', cleaningFee: '75', serviceFee: '35', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad4%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%2332CD32;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23FFD700;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad4)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ETropical Resort%3C/text%3E%3C/svg%3E'], amenities: ['Pool', 'Beach', 'Spa'], status: 'active', isActive: true },
-      { hostId: adminUser.id, title: 'Countryside Farm House', description: 'Charming farmhouse with garden', location: 'Tuscany, Italy', category: 'countryside', propertyType: 'house', guests: 4, beds: 2, bedrooms: 2, bathrooms: 2, pricePerNight: '150', cleaningFee: '35', serviceFee: '15', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad5%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%2390EE90;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23228B22;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad5)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EFarm House%3C/text%3E%3C/svg%3E'], amenities: ['Garden', 'Kitchen'], status: 'active', isActive: true },
-      { hostId: hostUser.id, title: 'Luxury Penthouse', description: 'Ultra-modern luxury penthouse', location: 'Miami, Florida', category: 'city', propertyType: 'apartment', guests: 4, beds: 2, bedrooms: 2, bathrooms: 2, pricePerNight: '500', cleaningFee: '100', serviceFee: '50', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad6%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%23FFB6C1;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23FF69B4;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad6)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ELuxury Penthouse%3C/text%3E%3C/svg%3E'], amenities: ['Pool', 'Gym', 'WiFi'], status: 'active', isActive: true },
-      { hostId: adminUser.id, title: 'Private Beach House', description: 'Exclusive private beach house', location: 'Malibu, California', category: 'beachfront', propertyType: 'house', guests: 5, beds: 3, bedrooms: 3, bathrooms: 2, pricePerNight: '400', cleaningFee: '80', serviceFee: '40', taxRate: '0.0625', images: ['data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22300%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad7%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 style=%22stop-color:%23FFA500;stop-opacity:1%22 /%3E%3Cstop offset=%22100%25%22 style=%22stop-color:%23FF6347;stop-opacity:1%22 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%22500%22 height=%22300%22 fill=%22url(%23grad7)%22/%3E%3Ctext x=%22250%22 y=%22150%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EBeach House%3C/text%3E%3C/svg%3E'], amenities: ['Beach', 'Pool', 'WiFi'], status: 'active', isActive: true },
-    ];
-    
-    for (const prop of testProps) {
-      await storage.createProperty(prop as any);
-    }
-    console.log('✓ Seeded 7 test properties');
+    await Promise.race([seedPromise, seedTimeout]);
   } catch (error: any) {
     const errorMsg = error?.message || error?.toString?.() || JSON.stringify(error) || 'Unknown error';
-    console.error('Error seeding properties:', errorMsg);
-    console.error('Error details:', { code: error?.code, detail: error?.detail, stack: error?.stack });
+    console.warn('⚠️ Seeding skipped (not critical):', errorMsg.substring(0, 100));
+    console.warn('App will still serve content. Seeding will retry on next restart.');
   }
 }
 
@@ -208,12 +218,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Wait a bit for tables to be ready, then seed test properties
-  setTimeout(() => {
+  // Seed properties in background (non-blocking)
+  // This runs independently and won't block app startup
+  setImmediate(() => {
     seedProperties().catch((err) => {
-      console.error('Property seeding failed:', err?.message || err?.toString() || JSON.stringify(err));
+      console.warn('Background seeding error:', err?.message || 'Unknown error');
     });
-  }, 500);
+  });
 
   // Initialize Stripe in background (non-blocking)
   initStripe().catch((err) => {
