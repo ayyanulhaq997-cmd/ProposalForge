@@ -85,12 +85,16 @@ const fallbackProperties: Property[] = [
     bathrooms: 3,
     isActive: true,
     status: 'active',
-    rating: 4.8,
-    reviewCount: 127,
     createdAt: new Date(),
     updatedAt: new Date(),
     images: [],
-  },
+    address: null,
+    latitude: null,
+    longitude: null,
+    amenities: [],
+    rules: [],
+    cancellationPolicy: null,
+  } as Property,
   {
     id: 'prop-2',
     hostId: 'host@example.com',
@@ -105,12 +109,16 @@ const fallbackProperties: Property[] = [
     bathrooms: 2,
     isActive: true,
     status: 'active',
-    rating: 4.9,
-    reviewCount: 95,
     createdAt: new Date(),
     updatedAt: new Date(),
     images: [],
-  },
+    address: null,
+    latitude: null,
+    longitude: null,
+    amenities: [],
+    rules: [],
+    cancellationPolicy: null,
+  } as Property,
   {
     id: 'prop-3',
     hostId: 'host@example.com',
@@ -125,12 +133,16 @@ const fallbackProperties: Property[] = [
     bathrooms: 2,
     isActive: true,
     status: 'active',
-    rating: 4.7,
-    reviewCount: 156,
     createdAt: new Date(),
     updatedAt: new Date(),
     images: [],
-  },
+    address: null,
+    latitude: null,
+    longitude: null,
+    amenities: [],
+    rules: [],
+    cancellationPolicy: null,
+  } as Property,
   {
     id: 'prop-4',
     hostId: 'host@example.com',
@@ -145,12 +157,16 @@ const fallbackProperties: Property[] = [
     bathrooms: 4,
     isActive: true,
     status: 'active',
-    rating: 4.9,
-    reviewCount: 203,
     createdAt: new Date(),
     updatedAt: new Date(),
     images: [],
-  },
+    address: null,
+    latitude: null,
+    longitude: null,
+    amenities: [],
+    rules: [],
+    cancellationPolicy: null,
+  } as Property,
 ];
 
 export interface IStorage {
@@ -430,7 +446,8 @@ export class DatabaseStorage implements IStorage {
         .limit(limit);
     } catch (error) {
       console.error('Error fetching featured properties:', error);
-      return [];
+      // Return fallback properties when database is offline
+      return fallbackProperties.slice(0, limit);
     }
   }
 
