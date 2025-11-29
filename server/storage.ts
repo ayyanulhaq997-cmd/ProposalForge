@@ -371,7 +371,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsersByRole(role: string): Promise<User[]> {
-    return (await db.select().from(users).where(eq(users.role, role))) as User[];
+    try {
+      return (await db.select().from(users).where(eq(users.role, role))) as User[];
+    } catch (error) {
+      console.error('Error fetching users by role:', error);
+      return [];
+    }
   }
 
   async updateUserRole(id: string, role: string): Promise<User | undefined> {
@@ -390,8 +395,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProperty(id: string): Promise<Property | undefined> {
-    const [property] = await db.select().from(properties).where(eq(properties.id, id));
-    return property;
+    try {
+      const [property] = await db.select().from(properties).where(eq(properties.id, id));
+      if (property) return property;
+      // Return fallback property if found
+      return fallbackProperties.find(p => p.id === id);
+    } catch (error) {
+      console.error('Error fetching property:', error);
+      return fallbackProperties.find(p => p.id === id);
+    }
   }
 
   async getProperties(filters?: PropertyFilters): Promise<Property[]> {
@@ -481,16 +493,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBooking(id: string): Promise<Booking | undefined> {
-    const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
-    return booking;
+    try {
+      const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
+      return booking;
+    } catch (error) {
+      console.error('Error fetching booking:', error);
+      return undefined;
+    }
   }
 
   async getBookingsByGuest(guestId: string): Promise<Booking[]> {
-    return await db
-      .select()
-      .from(bookings)
-      .where(eq(bookings.guestId, guestId))
-      .orderBy(desc(bookings.checkIn));
+    try {
+      return await db
+        .select()
+        .from(bookings)
+        .where(eq(bookings.guestId, guestId))
+        .orderBy(desc(bookings.checkIn));
+    } catch (error) {
+      console.error('Error fetching guest bookings:', error);
+      return [];
+    }
   }
 
   async getBookingsByHost(hostId: string): Promise<Booking[]> {
