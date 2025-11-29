@@ -483,7 +483,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRoomTypesForProperty(propertyId: string): Promise<RoomType[]> {
-    return await db.select().from(roomTypes).where(eq(roomTypes.propertyId, propertyId));
+    try {
+      return await db.select().from(roomTypes).where(eq(roomTypes.propertyId, propertyId));
+    } catch (error) {
+      console.error('Error fetching room types:', error);
+      // Return empty array as fallback - rooms can be added when database is available
+      return [];
+    }
   }
 
   // Booking operations

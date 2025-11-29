@@ -537,7 +537,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Property not found" });
       }
       
-      const roomTypes = await storage.getRoomTypesForProperty(req.params.id);
+      let roomTypes: any[] = [];
+      try {
+        roomTypes = await storage.getRoomTypesForProperty(req.params.id);
+      } catch (error) {
+        console.error("Error fetching room types:", error);
+        roomTypes = [];
+      }
       
       res.json({ ...property, roomTypes });
     } catch (error) {
