@@ -69,6 +69,90 @@ import {
 import { db } from "./db";
 import { eq, and, gte, lte, desc, asc, sql, or, like, inArray } from "drizzle-orm";
 
+// Fallback test properties for offline database
+const fallbackProperties: Property[] = [
+  {
+    id: 'prop-1',
+    hostId: 'host@example.com',
+    title: 'Beachfront Paradise Villa',
+    description: 'Luxury beachfront villa with private pool',
+    location: 'Maldives',
+    category: 'villa',
+    propertyType: 'house',
+    pricePerNight: '250',
+    guests: 8,
+    beds: 4,
+    bathrooms: 3,
+    isActive: true,
+    status: 'active',
+    rating: 4.8,
+    reviewCount: 127,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    images: [],
+  },
+  {
+    id: 'prop-2',
+    hostId: 'host@example.com',
+    title: 'Mountain Cabin Retreat',
+    description: 'Cozy mountain cabin with fireplace',
+    location: 'Swiss Alps',
+    category: 'cabin',
+    propertyType: 'house',
+    pricePerNight: '180',
+    guests: 6,
+    beds: 3,
+    bathrooms: 2,
+    isActive: true,
+    status: 'active',
+    rating: 4.9,
+    reviewCount: 95,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    images: [],
+  },
+  {
+    id: 'prop-3',
+    hostId: 'host@example.com',
+    title: 'Downtown City Apartment',
+    description: 'Modern luxury apartment in the heart of the city',
+    location: 'New York',
+    category: 'apartment',
+    propertyType: 'apartment',
+    pricePerNight: '200',
+    guests: 4,
+    beds: 2,
+    bathrooms: 2,
+    isActive: true,
+    status: 'active',
+    rating: 4.7,
+    reviewCount: 156,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    images: [],
+  },
+  {
+    id: 'prop-4',
+    hostId: 'host@example.com',
+    title: 'Tropical Paradise Resort',
+    description: 'All-inclusive tropical resort with beach access',
+    location: 'Bali',
+    category: 'villa',
+    propertyType: 'house',
+    pricePerNight: '350',
+    guests: 10,
+    beds: 5,
+    bathrooms: 4,
+    isActive: true,
+    status: 'active',
+    rating: 4.9,
+    reviewCount: 203,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    images: [],
+  },
+];
+
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
@@ -295,39 +379,45 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProperties(filters?: PropertyFilters): Promise<Property[]> {
-    let query = db.select().from(properties);
-    const conditions: any[] = [];
+    try {
+      let query = db.select().from(properties);
+      const conditions: any[] = [];
 
-    if (filters?.location) {
-      conditions.push(like(properties.location, `%${filters.location}%`));
-    }
-    if (filters?.category && filters.category !== 'all') {
-      conditions.push(eq(properties.category, filters.category));
-    }
-    if (filters?.propertyType && filters.propertyType !== 'all') {
-      conditions.push(eq(properties.propertyType, filters.propertyType));
-    }
-    if (filters?.minPrice) {
-      conditions.push(gte(properties.pricePerNight, filters.minPrice.toString()));
-    }
-    if (filters?.maxPrice && filters.maxPrice !== 9999) {
-      conditions.push(lte(properties.pricePerNight, filters.maxPrice.toString()));
-    }
-    if (filters?.guests) {
-      conditions.push(gte(properties.guests, filters.guests));
-    }
-    if (filters?.hostId) {
-      conditions.push(eq(properties.hostId, filters.hostId));
-    }
-    if (filters?.status) {
-      conditions.push(eq(properties.status, filters.status));
-    }
+      if (filters?.location) {
+        conditions.push(like(properties.location, `%${filters.location}%`));
+      }
+      if (filters?.category && filters.category !== 'all') {
+        conditions.push(eq(properties.category, filters.category));
+      }
+      if (filters?.propertyType && filters.propertyType !== 'all') {
+        conditions.push(eq(properties.propertyType, filters.propertyType));
+      }
+      if (filters?.minPrice) {
+        conditions.push(gte(properties.pricePerNight, filters.minPrice.toString()));
+      }
+      if (filters?.maxPrice && filters.maxPrice !== 9999) {
+        conditions.push(lte(properties.pricePerNight, filters.maxPrice.toString()));
+      }
+      if (filters?.guests) {
+        conditions.push(gte(properties.guests, filters.guests));
+      }
+      if (filters?.hostId) {
+        conditions.push(eq(properties.hostId, filters.hostId));
+      }
+      if (filters?.status) {
+        conditions.push(eq(properties.status, filters.status));
+      }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as any;
-    }
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+      }
 
-    return await query.orderBy(desc(properties.createdAt));
+      return await query.orderBy(desc(properties.createdAt));
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      // Return fallback properties when database is offline
+      return fallbackProperties;
+    }
   }
 
   async getFeaturedProperties(limit = 12): Promise<Property[]> {
