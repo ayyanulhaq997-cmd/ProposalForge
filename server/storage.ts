@@ -240,24 +240,34 @@ export interface HostStats {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(or(eq(users.id, id), eq(users.email, id)));
-    return user as User | undefined;
+    try {
+      const [user] = await db.select().from(users).where(or(eq(users.id, id), eq(users.email, id)));
+      return user as User | undefined;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return undefined;
+    }
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const result = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    const user = (Array.isArray(result) ? result[0] : result) as User;
-    return user;
+    try {
+      const result = await db
+        .insert(users)
+        .values(userData)
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            ...userData,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      const user = (Array.isArray(result) ? result[0] : result) as User;
+      return user;
+    } catch (error) {
+      console.error('Error upserting user:', error);
+      throw error;
+    }
   }
 
   async getUsersByRole(role: string): Promise<User[]> {

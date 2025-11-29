@@ -41,12 +41,16 @@ export async function setupAuth(app: Express) {
           if (!user) {
             return done(null, false, { message: "User not found" });
           }
-          const isValid = await bcrypt.compare(password, user.passwordHash || "");
+          if (!user.passwordHash) {
+            return done(null, false, { message: "Invalid password" });
+          }
+          const isValid = await bcrypt.compare(password, user.passwordHash);
           if (!isValid) {
             return done(null, false, { message: "Invalid password" });
           }
           return done(null, user);
         } catch (error) {
+          console.error('Passport strategy error:', error);
           return done(error as Error);
         }
       }
@@ -62,6 +66,7 @@ export async function setupAuth(app: Express) {
       const user = await storage.getUser(id);
       done(null, user);
     } catch (error) {
+      console.error('Deserialize user error:', error);
       done(error as Error);
     }
   });
@@ -69,6 +74,7 @@ export async function setupAuth(app: Express) {
   app.post("/api/login", (req: any, res, next) => {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
+        console.error('Login error:', err);
         return res.status(500).json({ message: "Authentication error" });
       }
       if (!user) {
@@ -76,6 +82,7 @@ export async function setupAuth(app: Express) {
       }
       req.login(user, (loginErr: Error | null) => {
         if (loginErr) {
+          console.error('Session login error:', loginErr);
           return res.status(500).json({ message: "Login failed" });
         }
         res.json({ user });
