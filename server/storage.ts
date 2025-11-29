@@ -321,12 +321,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFeaturedProperties(limit = 12): Promise<Property[]> {
-    return await db
-      .select()
-      .from(properties)
-      .where(and(eq(properties.isActive, true), eq(properties.status, 'active')))
-      .orderBy(desc(properties.createdAt))
-      .limit(limit);
+    try {
+      return await db
+        .select()
+        .from(properties)
+        .where(and(eq(properties.isActive, true), eq(properties.status, 'active')))
+        .orderBy(desc(properties.createdAt))
+        .limit(limit);
+    } catch (error) {
+      console.error('Error fetching featured properties:', error);
+      return [];
+    }
   }
 
   async updateProperty(id: string, data: Partial<InsertProperty>): Promise<Property | undefined> {
