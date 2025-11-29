@@ -72,7 +72,7 @@ async function seedProperties() {
     }
     console.log('✓ Seeded 7 test properties');
   } catch (error: any) {
-    console.error('Error seeding properties:', error.message);
+    console.error('Error seeding properties:', error?.message || error?.toString() || JSON.stringify(error));
   }
 }
 
@@ -187,10 +187,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Seed test properties
-  seedProperties().catch((err) => {
-    console.error('Property seeding failed:', err);
-  });
+  // Wait a bit for tables to be ready, then seed test properties
+  setTimeout(() => {
+    seedProperties().catch((err) => {
+      console.error('Property seeding failed:', err?.message || err?.toString() || JSON.stringify(err));
+    });
+  }, 500);
 
   // Initialize Stripe in background (non-blocking)
   initStripe().catch((err) => {
