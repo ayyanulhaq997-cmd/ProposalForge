@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Calendar, Users, MapPin, Home, Mountain, Building2, Palmtree, Heart, Loader2, Star } from "lucide-react";
+import { Search, Calendar, Users, MapPin, Home, Mountain, Building2, Palmtree, Heart, Loader2, Star, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,6 @@ export default function Landing() {
           src={heroImage}
           alt="Hero background"
           className="absolute inset-0 w-full h-full object-cover"
-          fetchPriority="high"
           decoding="async"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
@@ -69,10 +68,11 @@ export default function Landing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="inline-block bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 px-4 py-2 rounded-full mb-4 text-sm font-medium hover:bg-pink-200 dark:hover:bg-pink-900/50 cursor-pointer transition-colors active-elevate-2"
+            className="inline-flex items-center gap-2 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 px-4 py-2 rounded-full mb-4 text-sm font-medium hover:bg-pink-200 dark:hover:bg-pink-900/50 cursor-pointer transition-colors active-elevate-2"
             data-testid="button-chat-from-hero"
           >
-            ✨ Encuentra tu estadía ideal
+            <Sparkles className="h-4 w-4" />
+            Encuentra tu estadía ideal
           </motion.button>
           <motion.h1 
             className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2 sm:mb-4 tracking-tight" 
