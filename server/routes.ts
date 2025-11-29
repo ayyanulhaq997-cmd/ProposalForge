@@ -164,6 +164,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
       console.log('✓ Users table created');
       
+      // Add a small delay between table creations
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Create properties table
       await pool.query(`
         CREATE TABLE IF NOT EXISTS properties (
@@ -196,10 +199,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const errorMsg = tableError?.message || tableError?.toString?.() || JSON.stringify(tableError) || 'Unknown error';
       const errorCode = tableError?.code;
       const errorDetail = tableError?.detail;
-      console.error('Could not create tables:', errorMsg);
+      console.error('❌ Could not create tables');
+      console.error('Error message:', errorMsg);
       if (errorCode) console.error('Error code:', errorCode);
       if (errorDetail) console.error('Error detail:', errorDetail);
-      console.error('Full error object:', tableError);
+      if (tableError?.stack) console.error('Stack:', tableError.stack);
+      console.error('Full error:', JSON.stringify(tableError, Object.getOwnPropertyNames(tableError)));
     }
   }
 
