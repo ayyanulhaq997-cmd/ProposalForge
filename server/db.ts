@@ -15,12 +15,20 @@ if (!databaseUrl) {
 
 console.log('✓ Using DATABASE_URL:', databaseUrl ? 'Connection string present' : 'NOT SET (using fallback)');
 
-export const pool = new Pool({ 
-  connectionString: databaseUrl || 'postgresql://localhost/fallback',
-  // Connection pool settings for better stability
+// Handle Railway SSL certificate issues by disabling verification for private connections
+const connectionString = databaseUrl || 'postgresql://localhost/fallback';
+const connectionConfig: any = { 
+  connectionString,
   max: 5,
   idleTimeoutMillis: 10000,
   connectionTimeoutMillis: 5000,
-});
+};
+
+// For Railway and other external services, disable SSL certificate verification
+if (connectionString.includes('railway.internal') || connectionString.includes('neon.tech')) {
+  connectionConfig.ssl = { rejectUnauthorized: false };
+}
+
+export const pool = new Pool(connectionConfig);
 
 export const db = drizzle({ client: pool, schema });
