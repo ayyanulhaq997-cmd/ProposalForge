@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Footer } from "@/components/Footer";
+import heroImage from "@assets/stock_images/luxury_beachfront_va_c8c02a4b.jpg";
 import type { Property } from "@shared/schema";
 
 export default function Landing() {
@@ -50,7 +51,13 @@ export default function Landing() {
 
       <main>
       {/* Hero Section */}
-      <section className="relative h-[500px] sm:h-[600px] md:h-[700px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-pink-500">
+      <section className="relative h-[500px] sm:h-[600px] md:h-[700px] flex items-center justify-center overflow-hidden">
+        <img 
+          src={heroImage}
+          alt="Luxury beachfront vacation rental"
+          className="absolute inset-0 w-full h-full object-cover"
+          decoding="async"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
