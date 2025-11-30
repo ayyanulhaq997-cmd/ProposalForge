@@ -14,6 +14,8 @@ import type { Property } from "@shared/schema";
 
 export default function Landing() {
   const [searchLocation, setSearchLocation] = useState("");
+  const [checkIn, setCheckIn] = useState("");
+  const [guests, setGuests] = useState("");
   const [showAnimations, setShowAnimations] = useState(false);
   const [, navigate] = useLocation();
   const { data: properties, isLoading } = useQuery<Property[]>({
@@ -107,24 +109,53 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
           >
-            <Card className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-0 shadow-xl">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-background rounded-lg border">
-                    <MapPin className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            <Card className="bg-white/98 dark:bg-slate-900/95 backdrop-blur-md border-0 shadow-2xl">
+              <CardContent className="p-3 sm:p-5">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
+                  {/* Location */}
+                  <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                    <MapPin className="h-5 w-5 text-pink-500 flex-shrink-0" />
                     <Input
-                      placeholder="Dónde quieres ir?"
+                      placeholder="¿Dónde quieres ir?"
                       value={searchLocation}
                       onChange={(e) => setSearchLocation(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                      className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
                       data-testid="input-search-location"
                     />
                   </div>
+                  
+                  {/* Date */}
+                  <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                    <Calendar className="h-5 w-5 text-pink-500 flex-shrink-0" />
+                    <Input
+                      type="date"
+                      value={checkIn}
+                      onChange={(e) => setCheckIn(e.target.value)}
+                      className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-gray-900 dark:text-white"
+                      data-testid="input-check-in"
+                    />
+                  </div>
+                  
+                  {/* Guests */}
+                  <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                    <Users className="h-5 w-5 text-pink-500 flex-shrink-0" />
+                    <Input
+                      type="number"
+                      placeholder="Huéspedes"
+                      value={guests}
+                      onChange={(e) => setGuests(e.target.value)}
+                      min="1"
+                      className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                      data-testid="input-guests"
+                    />
+                  </div>
+                  
+                  {/* Search Button */}
                   <Button
                     size="lg"
                     onClick={handleSearch}
-                    className="sm:w-auto w-full bg-pink-500 hover:bg-pink-600 text-white"
+                    className="w-full sm:w-auto bg-pink-500 hover:bg-pink-600 text-white font-semibold px-8 rounded-lg"
                     data-testid="button-search"
                   >
                     <Search className="h-5 w-5 mr-2" />
@@ -146,22 +177,18 @@ export default function Landing() {
       </section>
 
       {/* Categories */}
-      <section className="py-12 sm:py-16 bg-background">
+      <section className="py-8 sm:py-12 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-8 text-center">Explora por tipo</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+          <div className="flex flex-wrap gap-3 justify-center">
             {categories.map((category) => (
-              <div key={category.name} data-testid={`link-category-${category.name.toLowerCase()}`}>
-                <Card 
-                  className="hover-elevate active-elevate-2 cursor-pointer transition-all border"
-                  onClick={() => window.location.href = `/search?category=${category.name.toLowerCase()}`}
-                >
-                  <CardContent className="p-6 text-center">
-                    <category.icon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 text-primary" />
-                    <h3 className="font-semibold text-sm sm:text-base">{category.name}</h3>
-                  </CardContent>
-                </Card>
-              </div>
+              <button
+                key={category.name}
+                onClick={() => window.location.href = `/search?category=${category.name.toLowerCase()}`}
+                data-testid={`link-category-${category.name.toLowerCase()}`}
+                className="px-6 py-2 rounded-full bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 font-medium text-sm sm:text-base hover:bg-pink-200 dark:hover:bg-pink-900/50 transition-colors hover-elevate"
+              >
+                {category.name}
+              </button>
             ))}
           </div>
         </div>
