@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Lock, Mail, User } from "lucide-react";
+import { Lock, Mail, User, CreditCard } from "lucide-react";
 
 export default function AdminSettings() {
   const { user } = useAuth();
@@ -167,6 +167,26 @@ export default function AdminSettings() {
           >
             {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Payment Method */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Payment Method
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <p className="text-sm">
+              <span className="text-muted-foreground">Configured Payment Gateway:</span> <span className="font-medium text-green-600">Stripe</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-3">
+              Stripe is configured as the primary payment gateway for processing guest bookings and host payouts.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
