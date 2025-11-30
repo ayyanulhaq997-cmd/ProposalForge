@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Menu, User, Heart, MessageSquare, Home, Search as SearchIcon } from "lucide-react";
+import { Menu, User, Heart, MessageSquare, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import logoImage from "@assets/logo new_1764510571700.png";
 
 export function PublicHeader() {
   const { user, isAuthenticated, isAdmin, isHost } = useAuth();
@@ -56,10 +57,8 @@ export function PublicHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 hover-elevate rounded-md px-3 py-2 active-elevate-2" data-testid="link-home">
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md hover:shadow-lg transition-shadow duration-200">
-              <Home className="h-6 w-6 text-primary-foreground" />
-            </div>
+          <Link href="/" className="flex items-center space-x-2 hover-elevate rounded-md px-2 py-2 active-elevate-2" data-testid="link-home">
+            <img src={logoImage} alt="StayHub Logo" className="h-10 w-10 object-contain" />
             <span className="hidden sm:inline font-semibold text-sm text-foreground">StayHub</span>
           </Link>
 
