@@ -45,18 +45,7 @@ added XXX packages in 2m
 
 ### Step 3: Setup Environment Variables
 
-**Option A: Using Replit (Recommended)**
-
-1. Open your Replit project
-2. Click **Secrets** tab (lock icon)
-3. Add these secrets:
-   - `DATABASE_URL` = Your PostgreSQL connection string
-   - `SESSION_SECRET` = Random string (e.g., `your-secret-key-123`)
-   - `VITE_SQUARE_APPLICATION_ID` = Your Square Application ID
-   - `VITE_SQUARE_LOCATION_ID` = Your Square Location ID
-   - `SQUARE_ACCESS_TOKEN` = Your Square API Access Token
-
-**Option B: Local Development (.env file)**
+Create a `.env` file in the project root:
 
 ```bash
 # Create .env file in project root
@@ -72,16 +61,7 @@ EOF
 
 ### Step 4: Setup Database
 
-**Option A: Using Replit Database (Easiest)**
-
-Replit provides a built-in PostgreSQL database:
-```bash
-# The DATABASE_URL is automatically set
-# Database is created and ready to use
-npm run db:push
-```
-
-**Option B: Using Neon (Free Cloud Database)**
+**Option A: Using Neon (Free Cloud Database)**
 
 1. Visit https://neon.tech (free tier available)
 2. Create new project

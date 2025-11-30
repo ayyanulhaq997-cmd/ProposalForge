@@ -3,7 +3,6 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import bcrypt from "bcrypt";
-import { runMigrations } from 'stripe-replit-sync';
 import { migrate } from 'drizzle-orm/neon-serverless/migrator';
 import { db, pool } from "./db";
 import { storage } from "./storage";
@@ -88,15 +87,8 @@ async function seedProperties() {
   }
 }
 
-// Initialize Stripe on startup (optional - only on Replit with credentials)
+// Initialize Stripe on startup
 async function initStripe() {
-  // IMPORTANT: Only run on Replit deployment to avoid exhausting database connections on external providers like Railway/Neon
-  const hasReplitConnector = process.env.REPLIT_CONNECTORS_HOSTNAME && (process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL);
-  
-  if (!hasReplitConnector) {
-    // Stripe sync only runs on Replit
-    return;
-  }
 
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -113,16 +105,10 @@ async function initStripe() {
       return;
     }
 
-    console.log('Initializing Stripe schema...');
-    await runMigrations({ databaseUrl });
-    console.log('Stripe schema ready');
+    console.log('Initializing Stripe...');
 
     try {
       const stripeSync = await getStripeSync();
-
-      // Set up managed webhook - Stripe appends the UUID automatically
-      console.log('Setting up managed webhook...');
-      const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
       const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
         `${webhookBaseUrl}/api/stripe/webhook`,
         { enabled_events: ['*'], description: 'Managed webhook for Stripe sync' }

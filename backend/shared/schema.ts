@@ -16,10 +16,10 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ============================================================================
-// AUTHENTICATION & USERS (Replit Auth Required)
+// AUTHENTICATION & USERS
 // ============================================================================
 
-// Session storage table (REQUIRED for Replit Auth)
+// Session storage table (REQUIRED for Express session management)
 export const sessions = pgTable(
   "sessions",
   {

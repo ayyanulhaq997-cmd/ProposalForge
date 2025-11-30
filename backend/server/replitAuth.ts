@@ -9,9 +9,12 @@ import { storage } from "./storage";
 
 const getOidcConfig = memoize(
   async () => {
+    if (!process.env.ISSUER_URL || !process.env.REPL_ID) {
+      throw new Error('OAuth is not configured. Set ISSUER_URL and REPL_ID environment variables');
+    }
     return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
+      new URL(process.env.ISSUER_URL),
+      process.env.REPL_ID
     );
   },
   { maxAge: 3600 * 1000 }
@@ -82,7 +85,7 @@ export async function setupAuth(app: Express) {
   const registeredStrategies = new Set<string>();
 
   const ensureStrategy = (domain: string) => {
-    const strategyName = `replitauth:${domain}`;
+    const strategyName = `oidcauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
       const strategy = new Strategy(
         {
@@ -103,7 +106,7 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    passport.authenticate(`oidcauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
@@ -111,7 +114,7 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    passport.authenticate(`oidcauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
