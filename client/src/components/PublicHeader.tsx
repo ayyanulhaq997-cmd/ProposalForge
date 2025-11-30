@@ -58,7 +58,9 @@ export function PublicHeader() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 hover-elevate rounded-md px-2 py-2 active-elevate-2" data-testid="link-home">
-            <img src={logoImage} alt="StayHub Logo" className="h-10 w-10 object-contain" />
+            <div className="h-10 w-10 rounded bg-blue-600 dark:bg-blue-700 flex items-center justify-center">
+              <img src={logoImage} alt="StayHub Logo" className="h-8 w-8 object-contain" />
+            </div>
             <span className="hidden sm:inline font-semibold text-sm text-foreground">StayHub</span>
           </Link>
 
