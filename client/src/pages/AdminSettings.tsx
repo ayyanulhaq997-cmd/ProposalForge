@@ -15,6 +15,7 @@ export default function AdminSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("stripe");
 
   const updateEmailMutation = useMutation({
     mutationFn: async () => {
@@ -175,16 +176,57 @@ export default function AdminSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Payment Method
+            Payment Gateway Selection
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <p className="text-sm">
-              <span className="text-muted-foreground">Configured Payment Gateway:</span> <span className="font-medium text-green-600">Stripe</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-3">
-              Stripe is configured as the primary payment gateway for processing guest bookings and host payouts.
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Choose your preferred payment gateway for processing guest bookings and host payouts.
+          </p>
+          
+          <div className="space-y-3">
+            {/* Stripe Option */}
+            <div className="flex items-center p-4 border border-gray-200 dark:border-slate-700 rounded-lg hover-elevate cursor-pointer" onClick={() => setPaymentMethod("stripe")}>
+              <input
+                type="radio"
+                id="stripe"
+                name="payment-method"
+                value="stripe"
+                checked={paymentMethod === "stripe"}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="h-4 w-4"
+                data-testid="radio-stripe"
+              />
+              <label htmlFor="stripe" className="ml-3 flex-1 cursor-pointer">
+                <p className="font-semibold text-foreground">Stripe</p>
+                <p className="text-xs text-muted-foreground">Global payment processing with 3D Secure support</p>
+              </label>
+              {paymentMethod === "stripe" && <span className="text-green-600 font-medium">Selected</span>}
+            </div>
+
+            {/* Square Option */}
+            <div className="flex items-center p-4 border border-gray-200 dark:border-slate-700 rounded-lg hover-elevate cursor-pointer" onClick={() => setPaymentMethod("square")}>
+              <input
+                type="radio"
+                id="square"
+                name="payment-method"
+                value="square"
+                checked={paymentMethod === "square"}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="h-4 w-4"
+                data-testid="radio-square"
+              />
+              <label htmlFor="square" className="ml-3 flex-1 cursor-pointer">
+                <p className="font-semibold text-foreground">Square</p>
+                <p className="text-xs text-muted-foreground">Flexible payment solutions with point-of-sale integration</p>
+              </label>
+              {paymentMethod === "square" && <span className="text-green-600 font-medium">Selected</span>}
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <p className="text-xs text-muted-foreground">
+              Your selection: <span className="font-medium capitalize text-foreground">{paymentMethod}</span>
             </p>
           </div>
         </CardContent>
