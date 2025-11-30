@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Footer } from "@/components/Footer";
-import heroImage from "@assets/stock_images/luxury_beachfront_va_c8c02a4b.jpg";
+import heroImage from "@assets/stock_images/luxury_resort_pool_v_f8b91ec8.jpg";
 import type { Property } from "@shared/schema";
 
 export default function Landing() {
