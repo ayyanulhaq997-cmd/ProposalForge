@@ -143,14 +143,7 @@ Visit **http://localhost:5000** in your browser!
 
 ### Add Credentials to Your App
 
-**In Replit:**
-1. Click **Secrets** tab
-2. Add 3 secrets:
-   - `VITE_SQUARE_APPLICATION_ID`
-   - `VITE_SQUARE_LOCATION_ID`
-   - `SQUARE_ACCESS_TOKEN`
-
-**Or in .env file:**
+Add to `.env` file:
 ```bash
 VITE_SQUARE_APPLICATION_ID=sq_apia_xxxxx
 VITE_SQUARE_LOCATION_ID=sq_location_xxxxx
@@ -406,12 +399,6 @@ npm run build
 # Creates ./dist/ folder with optimized code
 ```
 
-### Deploy to Replit
-
-1. The app auto-deploys when you push code
-2. No additional setup needed
-3. Visit your Replit project URL
-
 ### Deploy to Railway/Render/Vercel
 
 1. Push code to GitHub
@@ -468,7 +455,7 @@ Before going live:
 ## Performance Tips
 
 1. **Enable Database Connection Pooling**
-   - Replit/Neon does this automatically
+   - Neon does this automatically
 
 2. **Use CDN for Images**
    - Add image optimization service
