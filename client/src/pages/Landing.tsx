@@ -17,6 +17,7 @@ export default function Landing() {
   const [checkIn, setCheckIn] = useState("");
   const [guests, setGuests] = useState("");
   const [showAnimations, setShowAnimations] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [, navigate] = useLocation();
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ['/api/properties/search'],
@@ -35,12 +36,17 @@ export default function Landing() {
     { name: "Cabaña", icon: Mountain, image: "cabin" },
   ];
 
+  // Filter properties based on search criteria
+  const filteredProperties = properties?.filter((prop) => {
+    const matchesLocation = !searchLocation.trim() || 
+      prop.location.toLowerCase().includes(searchLocation.toLowerCase()) ||
+      prop.title.toLowerCase().includes(searchLocation.toLowerCase());
+    
+    return matchesLocation;
+  }) || [];
+
   const handleSearch = () => {
-    if (searchLocation.trim()) {
-      window.location.href = `/search?location=${encodeURIComponent(searchLocation)}`;
-    } else {
-      window.location.href = "/search";
-    }
+    setHasSearched(true);
   };
 
   const handleChatClick = () => {
@@ -116,7 +122,7 @@ export default function Landing() {
                   <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                     <MapPin className="h-5 w-5 text-pink-500 flex-shrink-0" />
                     <Input
-                      placeholder="¿Dónde quieres ir?"
+                      placeholder="Buscar un lugar"
                       value={searchLocation}
                       onChange={(e) => setSearchLocation(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -197,16 +203,25 @@ export default function Landing() {
       {/* Featured Properties */}
       <section className="py-12 sm:py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-3">Propiedades Destacadas</h2>
-          <p className="text-muted-foreground mb-8">Los mejores alojamientos seleccionados para ti</p>
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-3">
+            {hasSearched ? "Resultados de Búsqueda" : "Propiedades Destacadas"}
+          </h2>
+          <p className="text-muted-foreground mb-8">
+            {hasSearched 
+              ? filteredProperties.length === 0 
+                ? "No se encontraron propiedades que coincidan con tu búsqueda"
+                : `Se encontraron ${filteredProperties.length} propiedades`
+              : "Los mejores alojamientos seleccionados para ti"}
+          </p>
           
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : properties && properties.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {properties.slice(0, 4).map((property) => (
+          ) : hasSearched ? (
+            filteredProperties.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredProperties.map((property) => (
                 <div
                   key={property.id}
                   onClick={() => window.location.href = `/property/${property.id}`}
@@ -242,6 +257,50 @@ export default function Landing() {
                       </div>
 
                       {/* Price */}
+                      <div className="text-lg font-bold text-primary">
+                        ${Number(property.pricePerNight).toFixed(0)} <span className="text-sm font-normal text-muted-foreground">/night</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                ))}
+              </div>
+            ) : null
+          ) : properties && properties.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {properties.slice(0, 4).map((property) => (
+                <div
+                  key={property.id}
+                  onClick={() => window.location.href = `/property/${property.id}`}
+                  className="text-left hover-elevate active-elevate-2 transition-all rounded-lg overflow-hidden cursor-pointer"
+                  data-testid={`card-property-${property.id}`}
+                >
+                  <Card className="overflow-hidden">
+                    <div className="relative overflow-hidden bg-muted aspect-video">
+                      <img
+                        src={`https://picsum.photos/500/300?random=${property.id}`}
+                        alt={property.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <Badge className="absolute top-3 left-3 capitalize bg-black/60">
+                        {property.category}
+                      </Badge>
+                    </div>
+
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-lg mb-1 line-clamp-1">{property.title}</h3>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
+                        <MapPin className="h-4 w-4" />
+                        {property.location}
+                      </p>
+                      
+                      <div className="flex items-center gap-1 mb-3">
+                        <Star className="h-4 w-4 fill-primary text-primary" />
+                        <span className="text-sm font-medium">4.8</span>
+                        <span className="text-xs text-muted-foreground">(127 reseñas)</span>
+                      </div>
+
                       <div className="text-lg font-bold text-primary">
                         ${Number(property.pricePerNight).toFixed(0)} <span className="text-sm font-normal text-muted-foreground">/night</span>
                       </div>
