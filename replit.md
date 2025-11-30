@@ -1,16 +1,8 @@
-# StayHub - Vacation Rental Platform
+# StayHub Vacation Rental Platform
 
 ## Overview
 
-StayHub is a production-ready vacation rental platform built with React, TypeScript, Express, and PostgreSQL. The platform enables property listings, real-time bookings, secure payments (Stripe & Square), multi-role authentication (guest/host/admin), real-time messaging, and comprehensive admin tools. The application is fully functional with 51 features implemented, security audited, and ready for deployment.
-
-**Tech Stack:**
-- Frontend: React 18, TypeScript, Tailwind CSS, shadcn/ui components
-- Backend: Express.js, Node.js
-- Database: PostgreSQL (via Drizzle ORM)
-- Payment: Stripe & Square integrations
-- Authentication: Passport.js (local + OAuth)
-- Real-time: WebSocket-based chat with file uploads
+StayHub is a full-stack vacation rental platform built with React, TypeScript, Express, and PostgreSQL. It provides a complete booking ecosystem with multi-role authentication (guest/host/admin), real-time messaging, payment processing via Stripe and Square, and comprehensive property management capabilities. The platform features 51+ production-ready features including seasonal pricing, ID verification, audit logging, and push notifications.
 
 ## User Preferences
 
@@ -19,209 +11,169 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Routing**: Wouter for lightweight client-side routing
+- **State Management**: TanStack Query (React Query) for server state, React hooks for local state
+- **UI Components**: Radix UI primitives with shadcn/ui component library
+- **Styling**: Tailwind CSS with custom theme system supporting light/dark modes
+- **Build Tool**: Vite for fast development and optimized production builds
+- **Design System**: Custom design guidelines with Inter font family, primary gradient (#E91E63 to #D91E6F), and premium aesthetics
 
-**Component Structure:**
-- Modern React with functional components and hooks
-- shadcn/ui component library for consistent UI (New York style)
-- React Query (TanStack Query) for server state management
-- Wouter for lightweight client-side routing
-- Form validation using React Hook Form + Zod schemas
-
-**Design System:**
-- Theme: Light/dark mode with system preference detection
-- Primary color: Magenta gradient (#E91E63 to #D91E6F)
-- Secondary: Purple (#9C27B0) for admin areas
-- Typography: Inter font family
-- Responsive design with mobile-first approach
-
-**Key Pages:**
-- Public: Landing, Search, Property Detail, Booking Flow
-- Guest: Trips, Messages, Favorites, Profile
-- Host: Dashboard, Property Management, Earnings, Settings
-- Admin: Dashboard, User Management, Content Manager, Audit Logs
+**Key Frontend Decisions**:
+- Lazy loading for admin/host pages to improve initial load performance
+- Custom `ImageWithFallback` component handles missing images gracefully
+- Theme provider supports light/dark/system modes with localStorage persistence
+- Query client configured with `staleTime: Infinity` to minimize refetching
+- Spanish language support built-in (i18n system with EN/ES translations)
 
 ### Backend Architecture
+- **Runtime**: Node.js with Express server
+- **Language**: TypeScript with ES modules
+- **Database ORM**: Drizzle ORM for type-safe database queries
+- **Session Management**: express-session with PostgreSQL session store (connect-pg-simple)
+- **Authentication**: Dual strategy - local authentication (bcrypt) and OAuth (Replit OAuth/OpenID Connect)
+- **API Design**: RESTful endpoints with role-based access control middleware
 
-**Server Structure:**
-- Express.js server with TypeScript
-- Separation of dev (index-dev.ts with Vite) and prod (index-prod.ts) entry points
-- Middleware order critical: Stripe webhook BEFORE express.json() to preserve raw body
-- Session management using connect-pg-simple for PostgreSQL-backed sessions
+**Key Backend Decisions**:
+- Separate dev (`index-dev.ts`) and production (`index-prod.ts`) entry points
+- Development mode uses Vite middleware for HMR
+- Production mode serves pre-built static files from `dist/public`
+- Modular service architecture: `storage.ts` (database layer), `paymentService.ts`, `mediaService.ts`, `notificationService.ts`
+- Role guard middleware (`rolesGuard.ts`) enforces RBAC on protected routes
+- Verification middleware (`verificationMiddleware.ts`) requires ID verification for sensitive operations
 
-**Authentication:**
-- Dual auth system: Local (email/password with bcrypt) + OAuth (Replit)
-- Role-based access control (RBAC) with three roles: guest, host, admin
-- Session-based auth with 7-day TTL
-- Role enforcement via rolesGuard middleware
+### Database Architecture
+- **Database**: PostgreSQL (supports both Neon serverless and standard PostgreSQL)
+- **Connection**: Adaptive pool selection - NeonPool for Neon databases, standard pg Pool for Railway/other providers
+- **Schema Management**: Drizzle Kit for migrations
+- **Schema Design**: 
+  - Multi-table architecture with relations defined via Drizzle ORM
+  - Session storage table required for authentication
+  - User profiles support guest/host/admin roles with verification status tracking
+  - Properties have complex metadata (amenities, images, pricing rules)
+  - Bookings track status, payments, and special requests
+  - Conversations and messages for real-time chat with file upload support
+  - Audit logs for compliance and tracking
+  - Seasonal pricing rules, favorites, reviews, notifications
 
-**API Structure:**
-- RESTful endpoints organized by feature area
-- Auth routes: /api/auth/*, /api/login, /api/logout
-- Guest routes: /api/properties, /api/bookings, /api/favorites
-- Host routes: /api/host/* (protected, requires host/admin role)
-- Admin routes: /api/admin/* (protected, requires admin role)
-- Payment routes: /api/stripe/*, /api/square/*
+**Key Database Decisions**:
+- UUIDs for primary keys using `gen_random_uuid()`
+- JSONB columns for flexible metadata (amenities, images, custom fields)
+- Cascading deletes where appropriate
+- Index on session expiry for performance
+- Separate tables for seasonal pricing rules and calendar sync (iCal)
 
-**Data Layer:**
-- Drizzle ORM for type-safe database queries
-- Storage abstraction (storage.ts) wraps all database operations
-- Support for both Neon serverless and standard PostgreSQL
-- Automatic pool selection based on connection string
+### Authentication & Authorization
+- **Local Auth**: Email/password with bcrypt hashing (10 rounds)
+- **OAuth**: OpenID Connect via Replit (configurable issuer URL)
+- **Session Strategy**: Server-side sessions stored in PostgreSQL (7-day TTL)
+- **Role-Based Access Control**: Three roles (guest, host, admin) enforced via middleware
+- **Verification System**: ID verification required for booking and hosting features
 
-**Key Services:**
-- PaymentService: Handles Stripe/Square payment finalization, refunds, host payouts
-- MediaService: File upload management (prepared for S3/cloud storage integration)
-- NotificationService: Push notifications (database + optional Twilio SMS)
-
-### Database Schema
-
-**Core Tables:**
-- `users`: User accounts with role (guest/host/admin), verification status, payment IDs
-- `properties`: Property listings with pricing, amenities, location
-- `bookings`: Reservations with status (pending/confirmed/cancelled/completed)
-- `payments`: Payment records linked to bookings with Stripe/Square IDs
-- `conversations` & `messages`: Real-time chat between hosts and guests
-- `notifications`: In-app notification system
-- `favorites`: User-saved properties
-- `reviews`: Guest reviews with ratings (1-5 stars)
-- `availability`: Date-based property availability and blocking
-- `seasonalPricingRules`: Dynamic pricing by date range
-- `auditLogs`: Complete audit trail of system actions
-- `sessions`: PostgreSQL-backed session storage (required for auth)
-
-**Relationships:**
-- One-to-many: User → Properties (host relationship)
-- One-to-many: Property → Bookings
-- One-to-one: Booking → Payment
-- Many-to-many: Users ↔ Properties (via favorites)
-- One-to-many: Property → Media (images/videos)
-
-**Key Features:**
-- Multi-role system with data isolation (hosts only see their properties)
-- Seasonal pricing with multipliers
-- Room blocking for maintenance
-- ID verification workflow (pending/verified/rejected)
-- Audit logging for compliance
+**Security Considerations**:
+- CSRF protection via session cookies
+- SQL injection prevention through parameterized queries (Drizzle ORM)
+- XSS protection via React's built-in escaping
+- Passwords never stored in plain text
+- Session secrets required via environment variables
 
 ### Payment Processing
+- **Primary Gateway**: Stripe with React Stripe.js integration
+- **Secondary Gateway**: Square SDK support
+- **Payment Flow**: 
+  1. Create booking with pending status
+  2. Generate payment intent/token
+  3. Process payment client-side
+  4. Webhook confirms payment server-side
+  5. Finalize booking and update availability
+- **Compliance**: PCI DSS Level 1 compliant (uses hosted payment fields)
+- **Features**: Supports payment intents, refunds, commission calculation, host payouts
 
-**Dual Payment Gateway:**
-- Primary: Stripe (checkout sessions, payment intents)
-- Alternative: Square (web payments SDK)
-- PCI DSS Level 1 compliant implementation
-- Commission calculation (15% platform fee)
-- Host payout tracking separate from guest payments
+**Key Payment Decisions**:
+- Webhook route registered BEFORE `express.json()` middleware to preserve raw body
+- Payment finalization validates amount matches booking total
+- Commission calculated as percentage (15% default)
+- Host payout tracking with earnings dashboard
+- Audit logging for all payment events
 
-**Payment Flow:**
-1. Guest creates booking (status: pending)
-2. Payment processed via Stripe/Square
-3. Webhook confirms payment
-4. PaymentService finalizes: updates booking status, creates payment record, calculates host payout
-5. Availability dates blocked automatically
+### Real-Time Features
+- **Chat System**: Messages stored in database with conversation threads
+- **File Uploads**: Chat file attachments supported (images, documents)
+- **Typing Indicators**: Client-side simulation (no WebSocket overhead)
+- **Push Notifications**: Database-backed notification system with optional SMS via Twilio
 
-**Security:**
-- Webhook signature verification
-- Raw body preservation for Stripe webhooks (critical middleware order)
-- Amount validation before finalization
-- Idempotency to prevent double-processing
+**Key Real-Time Decisions**:
+- No WebSocket implementation (reduces infrastructure complexity)
+- Polling-based updates via React Query's refetch intervals
+- Notification service can integrate with external push providers
 
-### Security Measures
+### Media & Storage
+- **Current Implementation**: In-memory file storage with mock URLs (MVP)
+- **Production Ready**: Service layer designed for S3/Google Cloud Storage integration
+- **Image Handling**: Fallback system for missing/broken images
+- **File Types**: Images (property photos), videos, documents (ID verification, chat files)
 
-**Authentication Security:**
-- bcrypt password hashing (10 rounds)
-- Secure session management with httpOnly cookies
-- CSRF protection via session cookies
-- Role-based access control enforced at route level
-
-**Data Protection:**
-- SQL injection prevention via parameterized queries (Drizzle ORM)
-- XSS protection through React's automatic escaping
-- Input validation using Zod schemas
-- Audit logging for sensitive operations
-
-**Compliance:**
-- GDPR-ready with data export/deletion capabilities
-- PCI DSS Level 1 compliant payment handling
-- Audit trail for all financial transactions
+**Extensibility**:
+- `mediaService.ts` provides abstraction layer for storage backends
+- URLs stored in database, actual files can be migrated to cloud storage
+- Image optimization and CDN integration can be added without schema changes
 
 ## External Dependencies
 
-### Third-Party Services
+### Payment Providers
+- **Stripe**: Requires `STRIPE_SECRET_KEY` and `STRIPE_PUBLISHABLE_KEY` environment variables
+- **Square**: Optional, uses Replit connector or environment variables
+- **Webhook Endpoints**: `/api/stripe/webhook` for payment confirmations
 
-**Payment Processors:**
-- **Stripe**: Primary payment gateway
-  - Required: STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY
-  - Webhooks: /api/webhook/stripe (signature verification required)
-  
-- **Square**: Alternative payment gateway
-  - Required: SQUARE_ACCESS_TOKEN, SQUARE_LOCATION_ID, SQUARE_APPLICATION_ID
-  - Environment-based: sandbox vs production
+### Database
+- **PostgreSQL**: Required, supports Neon serverless and standard PostgreSQL
+- **Connection String**: `DATABASE_URL` environment variable
+- **Version**: PostgreSQL 12+ recommended
+- **Extensions**: None required (uses standard SQL features)
 
-**Database:**
-- **PostgreSQL**: Primary data store
-  - Required: DATABASE_URL
-  - Supports: Neon serverless, Railway, standard PostgreSQL
-  - Auto-detection: Neon vs standard based on connection string
+### Authentication Services
+- **Replit OAuth**: Optional, configured via `ISSUER_URL` and `REPL_ID`
+- **Local Auth**: Always available as fallback
+- **Session Storage**: Requires `SESSION_SECRET` environment variable
 
-**Optional Services:**
-- **Twilio**: SMS notifications (not required for core functionality)
-  - TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
+### Third-Party Integrations
+- **Twilio** (Optional): SMS notifications via `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`
+- **iCal Sync** (Implemented): External calendar integration for Airbnb/VRBO availability sync
+- **Google Fonts**: Preconnect to fonts.googleapis.com for Inter font family
 
-### Required Environment Variables
+### Development Tools
+- **Vite**: Dev server and build tool with Replit-specific plugins
+- **Drizzle Kit**: Database migrations and schema push
+- **TypeScript**: Full type safety across frontend and backend
+- **ESLint/Prettier**: Code quality (configured via package.json scripts)
 
-**Core:**
-- `DATABASE_URL`: PostgreSQL connection string
-- `SESSION_SECRET`: Secret for session encryption
-- `STRIPE_SECRET_KEY`: Stripe API secret key
-- `STRIPE_PUBLISHABLE_KEY`: Stripe public key
-- `NODE_ENV`: development | production
+### Deployment Platforms
+- **Vercel**: Supported via `vercel.json` configuration (serverless functions)
+- **Replit**: Native support with Replit-specific plugins and connectors
+- **Railway/Render**: Standard Node.js deployment compatible
+- **AWS/GCP/Azure**: Compatible with any Node.js hosting environment
 
-**OAuth (Replit-specific):**
-- `ISSUER_URL`: OAuth issuer URL
-- `REPL_ID`: Replit project identifier
+### Environment Variables Required
+```
+DATABASE_URL=postgresql://...
+SESSION_SECRET=random-secret-key
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+NODE_ENV=production|development
+```
 
-**Deployment:**
-- `REPLIT_DEPLOYMENT`: Flag for production builds
-- `REPLIT_CONNECTORS_HOSTNAME`: For connector-based credentials
+### Optional Environment Variables
+```
+ISSUER_URL=https://replit.com/oidc
+REPL_ID=replit-app-id
+TWILIO_ACCOUNT_SID=...
+TWILIO_AUTH_TOKEN=...
+TWILIO_PHONE_NUMBER=...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
 
-### Frontend Dependencies
-
-**UI Framework:**
-- @radix-ui/* components (20+ primitives for accessible UI)
-- Tailwind CSS for styling
-- Framer Motion for animations (if used)
-
-**State Management:**
-- @tanstack/react-query: Server state, caching, mutations
-- React Hook Form: Form state and validation
-- Zod: Runtime type validation
-
-**Utilities:**
-- date-fns: Date manipulation
-- clsx + tailwind-merge: Conditional class names
-- wouter: Lightweight routing
-
-### Backend Dependencies
-
-**Core Framework:**
-- express: Web server
-- drizzle-orm: Type-safe ORM
-- @neondatabase/serverless: Neon PostgreSQL driver
-- pg: Standard PostgreSQL driver
-
-**Authentication:**
-- passport: Authentication middleware
-- passport-local: Local strategy
-- openid-client: OAuth/OIDC
-- bcrypt: Password hashing
-- express-session: Session management
-- connect-pg-simple: PostgreSQL session store
-
-**Validation:**
-- drizzle-zod: Schema-to-Zod conversion
-- zod: Runtime validation
-
-**Build Tools:**
-- Vite: Frontend build and dev server
-- esbuild: Backend bundling for production
-- TypeScript: Type safety across stack
+### Build & Deployment
+- **Production Build**: `npm run build` creates optimized bundle in `dist/`
+- **Database Setup**: `npm run db:push` applies Drizzle schema to database
+- **Start Production**: `npm start` runs compiled server from `dist/index.js`
+- **Static Assets**: Served from `dist/public` in production mode
