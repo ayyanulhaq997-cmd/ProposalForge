@@ -17,12 +17,12 @@ Before starting, ensure you have:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/stayhub.git
-cd stayhub
+git clone https://github.com/EdwardFeliz29/vacacional_back.git backend
+cd backend
 
 # Or extract downloaded ZIP
-unzip stayhub.zip
-cd stayhub
+unzip backend.zip
+cd backend
 ```
 
 ### Step 2: Install Dependencies
@@ -45,21 +45,10 @@ added XXX packages in 2m
 
 ### Step 3: Setup Environment Variables
 
-**Option A: Using Replit (Recommended)**
-
-1. Open your Replit project
-2. Click **Secrets** tab (lock icon)
-3. Add these secrets:
-   - `DATABASE_URL` = Your PostgreSQL connection string
-   - `SESSION_SECRET` = Random string (e.g., `your-secret-key-123`)
-   - `VITE_SQUARE_APPLICATION_ID` = Your Square Application ID
-   - `VITE_SQUARE_LOCATION_ID` = Your Square Location ID
-   - `SQUARE_ACCESS_TOKEN` = Your Square API Access Token
-
-**Option B: Local Development (.env file)**
+Create a `.env` file in the project root:
 
 ```bash
-# Create .env file in project root
+# Create .env file
 cat > .env << 'EOF'
 DATABASE_URL=postgresql://user:password@localhost:5432/stayhub
 SESSION_SECRET=your-random-secret-key-min-32-chars
@@ -70,18 +59,11 @@ NODE_ENV=development
 EOF
 ```
 
+**Important: Never commit .env file to GitHub!** It's already in `.gitignore`
+
 ### Step 4: Setup Database
 
-**Option A: Using Replit Database (Easiest)**
-
-Replit provides a built-in PostgreSQL database:
-```bash
-# The DATABASE_URL is automatically set
-# Database is created and ready to use
-npm run db:push
-```
-
-**Option B: Using Neon (Free Cloud Database)**
+**Option A: Using Neon (Free Cloud Database)**
 
 1. Visit https://neon.tech (free tier available)
 2. Create new project
@@ -91,7 +73,7 @@ npm run db:push
 npm run db:push
 ```
 
-**Option C: Local PostgreSQL**
+**Option B: Local PostgreSQL**
 
 ```bash
 # Create local database (on your machine)
@@ -114,7 +96,6 @@ npm run dev
 # ✓ Built in Xms
 # ➜  Local:   http://localhost:5000/
 # ➜  Port:    5000
-# ➜  Network: http://192.168.x.x:5000
 ```
 
 Visit **http://localhost:5000** in your browser!
@@ -123,13 +104,13 @@ Visit **http://localhost:5000** in your browser!
 
 ## First Time Setup Checklist
 
-- [x] Node.js installed (`node --version` shows 18+)
-- [x] Dependencies installed (`npm install` completed)
-- [x] Database configured (PostgreSQL or Neon)
-- [x] Environment variables set
-- [x] `npm run db:push` executed successfully
-- [x] Dev server running (`npm run dev`)
-- [x] Can visit http://localhost:5000
+- [ ] Node.js installed (`node --version` shows 18+)
+- [ ] Dependencies installed (`npm install` completed)
+- [ ] Database configured (PostgreSQL or Neon)
+- [ ] Environment variables set in `.env` file
+- [ ] `npm run db:push` executed successfully
+- [ ] Dev server running (`npm run dev`)
+- [ ] Can visit http://localhost:5000
 
 ---
 
@@ -163,14 +144,7 @@ Visit **http://localhost:5000** in your browser!
 
 ### Add Credentials to Your App
 
-**In Replit:**
-1. Click **Secrets** tab
-2. Add 3 secrets:
-   - `VITE_SQUARE_APPLICATION_ID`
-   - `VITE_SQUARE_LOCATION_ID`
-   - `SQUARE_ACCESS_TOKEN`
-
-**Or in .env file:**
+Add to your `.env` file:
 ```bash
 VITE_SQUARE_APPLICATION_ID=sq_apia_xxxxx
 VITE_SQUARE_LOCATION_ID=sq_location_xxxxx
@@ -187,8 +161,6 @@ SQUARE_ACCESS_TOKEN=sq_pata_xxxxx
 6. Any future expiry and CVC
 7. Click "Pay Now"
 8. See confirmation page
-
-See `SQUARE_SETUP.md` for detailed Square integration guide.
 
 ---
 
@@ -208,9 +180,6 @@ npm run db:studio        # Open Drizzle Studio (visual DB editor)
 
 # Type checking
 npx tsc --noEmit         # Check TypeScript errors
-
-# Clean
-npm run clean            # Remove build artifacts
 ```
 
 ---
@@ -218,23 +187,18 @@ npm run clean            # Remove build artifacts
 ## Project Structure
 
 ```
-stayhub/
-├── client/              # Frontend React app
-│   └── src/
-│       ├── pages/       # Page components
-│       ├── components/  # Reusable components
-│       ├── lib/         # Utilities & config
-│       └── App.tsx      # Main app component
+backend/
 ├── server/              # Express backend
 │   ├── routes.ts        # API endpoints
 │   ├── storage.ts       # Data layer
-│   └── index.ts         # Server setup
+│   ├── index-dev.ts     # Development server
+│   └── index-prod.ts    # Production server
 ├── shared/              # Shared types & schemas
 │   └── schema.ts        # Database schemas
 └── package.json         # Dependencies & scripts
 ```
 
-See `PROJECT_STRUCTURE.md` for detailed breakdown.
+Frontend is in separate `frontend/` folder with its own React app.
 
 ---
 
@@ -300,9 +264,9 @@ npm run db:push
 ### Issue: "DATABASE_URL is not set"
 
 **Solution:**
-1. Check that `.env` file exists and has `DATABASE_URL`
-2. Or set secret in Replit UI (Secrets tab)
-3. Restart dev server after adding env var
+1. Check that `.env` file exists in project root and has `DATABASE_URL`
+2. Restart dev server after adding env var
+3. Make sure `.env` is NOT in `.gitignore` locally (it is by default)
 
 ### Issue: "Cannot connect to database"
 
@@ -317,7 +281,7 @@ psql postgresql://user:password@localhost:5432/stayhub
 ### Issue: "Payment form not showing"
 
 **Solution:**
-1. Check that Square credentials are set in env vars
+1. Check that Square credentials are set in `.env`
 2. Verify VITE_ prefix on frontend environment variables
 3. Check browser console for Square SDK errors
 4. Make sure `npm run dev` is running
@@ -327,10 +291,13 @@ psql postgresql://user:password@localhost:5432/stayhub
 **Solution:**
 ```bash
 # Kill process on port 5000
+# On Mac/Linux:
 lsof -ti:5000 | xargs kill -9
 
-# Or use different port
-PORT=3000 npm run dev
+# On Windows PowerShell:
+netstat -ano | findstr :5000
+# Note the PID, then:
+taskkill /PID <PID> /F
 ```
 
 ### Issue: "npm install fails"
@@ -359,13 +326,6 @@ npx tsc --noEmit
 # Fix errors in code files
 ```
 
-### Issue: "Hot reload not working"
-
-**Solution:**
-- This is expected in some environments
-- Just refresh the browser manually
-- Is not a blocking issue
-
 ---
 
 ## Testing Locally
@@ -374,7 +334,7 @@ npx tsc --noEmit
 
 ```
 1. Visit http://localhost:5000
-2. See 7 pre-seeded properties
+2. See pre-seeded properties
 3. Click on any property
 4. View details, amenities, pricing
 ```
@@ -383,11 +343,10 @@ npx tsc --noEmit
 
 ```
 1. Click property → "Book Now"
-2. Select check-in: 2025-12-20
-3. Select check-out: 2025-12-27
-4. Click "Proceed to Payment"
-5. Enter test card details
-6. See booking confirmation
+2. Select check-in and check-out dates
+3. Click "Proceed to Payment"
+4. Enter test card details
+5. See booking confirmation
 ```
 
 ### Test Admin Dashboard
@@ -395,24 +354,7 @@ npx tsc --noEmit
 ```
 1. Login as: admin@stayhub.test / admin123
 2. Visit /admin
-3. See 7 feature tabs:
-   - Seasonal Pricing
-   - Chat Files
-   - Calendar Sync
-   - Push Notifications
-   - Room Blocking
-   - Audit Logs
-   - User Impersonation
-```
-
-### Test Chat
-
-```
-1. Login as User1
-2. Open chat with another user
-3. Send message → should appear instantly
-4. Logout and login as User2
-5. See message in conversation
+3. See admin features and controls
 ```
 
 ---
@@ -425,12 +367,6 @@ npx tsc --noEmit
 npm run build
 # Creates ./dist/ folder with optimized code
 ```
-
-### Deploy to Replit
-
-1. The app auto-deploys when you push code
-2. No additional setup needed
-3. Visit your Replit project URL
 
 ### Deploy to Railway/Render/Vercel
 
@@ -449,7 +385,7 @@ npm run build
 ```bash
 # On your server:
 git clone <your-repo>
-cd stayhub
+cd backend
 npm install
 npm run build
 
@@ -472,23 +408,24 @@ pm2 start dist/index.js --name "stayhub"
 
 Before going live:
 
-- [x] Change `SESSION_SECRET` to random 32+ character string
-- [x] Use real Square credentials (not sandbox)
-- [x] Enable HTTPS on your domain
-- [x] Set database connection to production
-- [x] Remove test data from database
-- [x] Set `NODE_ENV=production`
-- [x] Add real admin user credentials
-- [x] Configure domain DNS
-- [x] Setup monitoring/logging
-- [x] Backup database regularly
+- [ ] Change `SESSION_SECRET` to random 32+ character string
+- [ ] Use real Square credentials (not sandbox)
+- [ ] Enable HTTPS on your domain
+- [ ] Set database connection to production
+- [ ] Remove test data from database
+- [ ] Set `NODE_ENV=production`
+- [ ] Add real admin user credentials
+- [ ] Configure domain DNS
+- [ ] Setup monitoring/logging
+- [ ] Backup database regularly
 
 ---
 
 ## Performance Tips
 
 1. **Enable Database Connection Pooling**
-   - Replit/Neon does this automatically
+   - Use connection pooling in production
+   - Neon handles this automatically
 
 2. **Use CDN for Images**
    - Add image optimization service
@@ -496,7 +433,7 @@ Before going live:
 
 3. **Enable Caching**
    - React Query does this automatically
-   - Consider adding Redis
+   - Consider adding Redis for backend
 
 4. **Monitor Performance**
    - Use Sentry for error tracking
@@ -507,24 +444,19 @@ Before going live:
 ## Next Steps
 
 1. **Review the Code**
-   - Start with `client/src/App.tsx`
-   - Then explore `server/routes.ts`
-   - Read `shared/schema.ts` for data models
+   - Start with `server/routes.ts`
+   - Then explore `shared/schema.ts` for data models
+   - Check frontend in separate repo
 
 2. **Customize**
-   - Change colors in `client/src/index.css`
-   - Update content in pages/components
-   - Add your properties to database
+   - Update database with your properties
+   - Modify API endpoints as needed
+   - Update frontend styling and content
 
 3. **Deploy**
    - Follow "Deploy to Production" section
    - Set real domain name
    - Monitor with logging/analytics
-
-4. **Add More Features**
-   - See `FINAL_CHECKLIST.md` for feature list
-   - Implement ones marked "READY"
-   - All infrastructure is in place
 
 ---
 
@@ -535,7 +467,7 @@ Before going live:
 - Express: https://expressjs.com
 - PostgreSQL: https://postgresql.org
 - Square: https://developer.squareup.com
-- Tailwind: https://tailwindcss.com
+- Node.js: https://nodejs.org
 
 **In Project:**
 - See `API_DOCUMENTATION.md` for endpoints
@@ -551,7 +483,7 @@ Check the troubleshooting section above for common issues.
 Most issues are solved by:
 1. Restarting dev server (`npm run dev`)
 2. Clearing browser cache (Ctrl+Shift+Delete)
-3. Checking environment variables
+3. Checking environment variables in `.env`
 4. Reading error messages carefully
 
 ---
