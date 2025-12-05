@@ -1,11 +1,14 @@
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import CreatePropertyForm from "@/components/CreatePropertyForm";
+import { HostDashboardLayout } from "@/components/HostDashboardLayout";
 
 export default function NewProperty() {
   const [, navigate] = useLocation();
   const { isAuthenticated, isLoading, isHost, isAdmin } = useAuth();
+  const [match, params] = useRoute("/host/properties/:id/edit");
+  const propertyId = match ? params?.id : undefined;
 
   if (isLoading) {
     return (
@@ -20,5 +23,12 @@ export default function NewProperty() {
     return null;
   }
 
-  return <CreatePropertyForm onSuccess={() => navigate("/host")} />;
+  return (
+    <HostDashboardLayout>
+      <CreatePropertyForm 
+        onSuccess={() => navigate("/host/properties")} 
+        propertyId={propertyId}
+      />
+    </HostDashboardLayout>
+  );
 }

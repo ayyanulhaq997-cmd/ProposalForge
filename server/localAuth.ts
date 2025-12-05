@@ -167,13 +167,12 @@ export async function setupAuth(app: Express) {
         firstName: firstName || "",
         lastName: lastName || "",
         passwordHash: hashedPassword,
-        role: "host"
+        role: "guest"
       });
-      // Log user in and send to verification
+      // Log user in automatically after registration
       req.login(user, (err: Error | null) => {
         if (err) return res.status(500).json({ message: "Login failed" });
-        // Frontend will redirect to /verify-required - ID verification is mandatory
-        res.json({ user, requiresVerification: true });
+        res.json({ user, message: "Account created successfully! Welcome to StayHub." });
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message });

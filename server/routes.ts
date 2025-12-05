@@ -1593,6 +1593,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all ID verifications for admin (all statuses)
+  app.get('/api/admin/id-verifications', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res: any) => {
+    try {
+      const verifications = await storage.getAllIdVerifications();
+      res.json(verifications);
+    } catch (error: any) {
+      console.error("Error fetching ID verifications:", error);
+      res.status(500).json({ message: "Failed to fetch ID verifications" });
+    }
+  });
+
   // Admin impersonate user (admin)
   app.post('/api/admin/impersonate/:userId', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res) => {
     try {

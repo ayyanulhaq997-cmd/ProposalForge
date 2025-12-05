@@ -26,9 +26,12 @@ const AdminBookings = lazy(() => import("@/pages/AdminBookings"));
 const AdminContentManager = lazy(() => import("@/pages/AdminContentManager"));
 const AdminSettings = lazy(() => import("@/pages/AdminSettings"));
 const HostDashboard = lazy(() => import("@/pages/HostDashboard"));
+const HostProperties = lazy(() => import("@/pages/HostProperties"));
+const HostBookings = lazy(() => import("@/pages/HostBookings"));
 const NewProperty = lazy(() => import("@/pages/NewProperty"));
 const HostProfile = lazy(() => import("@/pages/HostProfile"));
 const HostSettings = lazy(() => import("@/pages/HostSettings"));
+const HostEarnings = lazy(() => import("@/pages/HostEarnings"));
 const UserStatsPage = lazy(() => import("@/pages/UserStatsPage"));
 const StayHistory = lazy(() => import("@/pages/StayHistory"));
 const ProfileManagement = lazy(() => import("@/pages/ProfileManagement"));
@@ -77,9 +80,12 @@ function Router() {
 
       {/* Host routes - admins can also access - Lazy loaded */}
       <Route path="/host/properties/new" component={() => <Suspense fallback={<PageLoader />}><NewProperty /></Suspense>} />
+      <Route path="/host/properties/:id/edit" component={() => <Suspense fallback={<PageLoader />}><NewProperty /></Suspense>} />
+      <Route path="/host/properties" component={() => <Suspense fallback={<PageLoader />}><HostProperties /></Suspense>} />
+      <Route path="/host/bookings" component={() => <Suspense fallback={<PageLoader />}><HostBookings /></Suspense>} />
+      <Route path="/host/earnings" component={() => <Suspense fallback={<PageLoader />}><HostEarnings /></Suspense>} />
       <Route path="/host/settings" component={() => <Suspense fallback={<PageLoader />}><HostSettings /></Suspense>} />
       <Route path="/host" component={() => <Suspense fallback={<PageLoader />}><HostDashboard /></Suspense>} />
-      <Route path="/host/:rest*" component={() => <Suspense fallback={<PageLoader />}><HostDashboard /></Suspense>} />
 
       {/* Admin routes - accessible if authenticated and admin - Lazy loaded */}
       <Route path="/admin" component={() => <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>} />

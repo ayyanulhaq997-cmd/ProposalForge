@@ -364,6 +364,7 @@ export interface IStorage {
   getIdVerification(userId: string): Promise<IdVerification | undefined>;
   updateIdVerificationStatus(id: string, status: string, rejectionReason?: string): Promise<IdVerification | undefined>;
   getPendingVerifications(): Promise<IdVerification[]>;
+  getAllIdVerifications(): Promise<IdVerification[]>;
 
   // User Profile operations
   createOrUpdateUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
@@ -1232,6 +1233,10 @@ export class DatabaseStorage implements IStorage {
 
   async getPendingVerifications(): Promise<IdVerification[]> {
     return await db.select().from(idVerifications).where(eq(idVerifications.status, 'pending'));
+  }
+
+  async getAllIdVerifications(): Promise<IdVerification[]> {
+    return await db.select().from(idVerifications).orderBy(desc(idVerifications.createdAt));
   }
 
   // ============================================================================

@@ -1,14 +1,38 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Loader2, Check, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { HostDashboardLayout } from "@/components/HostDashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Booking } from "@shared/schema";
 
-export default function HostBookings() {
+function BookingsContent() {
+  const { toast } = useToast();
   const { data: bookings, isLoading } = useQuery<Booking[]>({
     queryKey: ['/api/host/bookings'],
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const res = await apiRequest("PATCH", `/api/bookings/${id}/status`, { status });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Booking status updated" });
+      queryClient.invalidateQueries({ queryKey: ["/api/host/bookings"] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update booking",
+        variant: "destructive"
+      });
+    },
   });
 
   if (isLoading) {
@@ -19,26 +43,29 @@ export default function HostBookings() {
     );
   }
 
-  const pending = bookings?.filter(b => b.status === 'pending') || [];
+  const pending = bookings?.filter(b => b.status === 'pending_approval' || b.status === 'pending') || [];
   const confirmed = bookings?.filter(b => b.status === 'confirmed') || [];
   const completed = bookings?.filter(b => b.status === 'completed') || [];
 
   const BookingCard = ({ booking }: { booking: Booking }) => (
-    <Card key={booking.id}>
+    <Card key={booking.id} data-testid={`card-booking-${booking.id}`}>
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-6 justify-between">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <Badge variant={booking.status === 'pending' ? 'secondary' : booking.status === 'confirmed' ? 'default' : 'outline'}>
+              <Badge 
+                variant={booking.status === 'pending_approval' || booking.status === 'pending' ? 'secondary' : booking.status === 'confirmed' ? 'default' : 'outline'}
+                data-testid={`badge-booking-status-${booking.id}`}
+              >
                 {booking.status}
               </Badge>
-              <Badge variant="outline">
-                {booking.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+              <Badge variant="outline" data-testid={`badge-payment-status-${booking.id}`}>
+                {booking.paymentStatus === 'paid' || booking.paymentStatus === 'completed' ? 'Paid' : 'Pending Payment'}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground mb-1">Guest ID: {booking.guestId}</p>
-            <p className="text-sm text-muted-foreground mb-2">Property ID: {booking.propertyId}</p>
-            <p className="text-sm">
+            <p className="text-sm text-muted-foreground mb-1" data-testid={`text-guest-${booking.id}`}>Guest ID: {booking.guestId || 'Guest'}</p>
+            <p className="text-sm text-muted-foreground mb-2" data-testid={`text-property-${booking.id}`}>Property ID: {booking.propertyId}</p>
+            <p className="text-sm" data-testid={`text-dates-${booking.id}`}>
               <span className="font-semibold">
                 {format(new Date(booking.checkIn), 'MMM d')}
               </span>
@@ -49,18 +76,30 @@ export default function HostBookings() {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-bold mb-2">
+            <p className="text-3xl font-bold mb-2" data-testid={`text-total-${booking.id}`}>
               ${Number(booking.total).toFixed(2)}
             </p>
-            <p className="text-sm text-muted-foreground mb-3">{booking.nights} nights</p>
+            <p className="text-sm text-muted-foreground mb-3" data-testid={`text-nights-${booking.id}`}>{booking.nights} nights</p>
             <div className="flex gap-2">
-              {booking.status === 'pending' && (
+              {(booking.status === 'pending_approval' || booking.status === 'pending') && (
                 <>
-                  <Button size="sm" variant="default">
+                  <Button 
+                    size="sm" 
+                    variant="default"
+                    onClick={() => updateStatusMutation.mutate({ id: booking.id, status: 'confirmed' })}
+                    disabled={updateStatusMutation.isPending}
+                    data-testid={`button-confirm-booking-${booking.id}`}
+                  >
                     <Check className="h-4 w-4 mr-1" />
                     Confirm
                   </Button>
-                  <Button size="sm" variant="destructive">
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={() => updateStatusMutation.mutate({ id: booking.id, status: 'cancelled' })}
+                    disabled={updateStatusMutation.isPending}
+                    data-testid={`button-decline-booking-${booking.id}`}
+                  >
                     <X className="h-4 w-4 mr-1" />
                     Decline
                   </Button>
@@ -123,5 +162,29 @@ export default function HostBookings() {
         </Card>
       )}
     </div>
+  );
+}
+
+export default function HostBookings() {
+  const [, navigate] = useLocation();
+  const { isAuthenticated, isLoading, isHost, isAdmin } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || (!isHost && !isAdmin)) {
+    navigate("/login");
+    return null;
+  }
+
+  return (
+    <HostDashboardLayout>
+      <BookingsContent />
+    </HostDashboardLayout>
   );
 }

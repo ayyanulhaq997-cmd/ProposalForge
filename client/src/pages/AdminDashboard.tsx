@@ -407,6 +407,134 @@ function HostVerificationView() {
   );
 }
 
+// ID Verification View
+function IdVerificationView() {
+  const { data: verifications, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/id-verifications'],
+  });
+  const { toast } = useToast();
+
+  const verifyIdMutation = useMutation({
+    mutationFn: async ({ verificationId, status, reason }: any) => {
+      await apiRequest('PATCH', `/api/user/verification/${verificationId}`, {
+        status,
+        rejectionReason: reason,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/id-verifications'] });
+      toast({ title: "Success", description: "ID verification updated" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" data-testid="loader-verifications" />;
+
+  const pendingVerifications = verifications?.filter(v => v.status === 'pending') || [];
+  const processedVerifications = verifications?.filter(v => v.status !== 'pending') || [];
+
+  const VerificationTable = ({ items, showActions = false }: { items: any[]; showActions?: boolean }) => (
+    <Table data-testid="table-verifications">
+      <TableHeader>
+        <TableRow>
+          <TableHead>User</TableHead>
+          <TableHead>Document Type</TableHead>
+          <TableHead>Submitted</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Document</TableHead>
+          {showActions && <TableHead>Actions</TableHead>}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {items.map((v) => (
+          <TableRow key={v.id} data-testid={`row-verification-${v.id}`}>
+            <TableCell className="font-mono text-sm" data-testid={`text-user-${v.id}`}>{v.userId?.substring(0, 8)}</TableCell>
+            <TableCell className="capitalize" data-testid={`text-doctype-${v.id}`}>{v.documentType?.replace('_', ' ') || 'ID Document'}</TableCell>
+            <TableCell data-testid={`text-date-${v.id}`}>{new Date(v.createdAt).toLocaleDateString()}</TableCell>
+            <TableCell>
+              <Badge 
+                variant={v.status === 'verified' ? 'default' : v.status === 'rejected' ? 'destructive' : 'secondary'}
+                data-testid={`badge-status-${v.id}`}
+              >
+                {v.status}
+              </Badge>
+            </TableCell>
+            <TableCell>
+              {v.documentUrl ? (
+                <a 
+                  href={v.documentUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-primary underline text-sm"
+                  data-testid={`link-document-${v.id}`}
+                >
+                  View Document
+                </a>
+              ) : (
+                <span className="text-muted-foreground text-sm" data-testid={`text-no-document-${v.id}`}>No document</span>
+              )}
+            </TableCell>
+            {showActions && (
+              <TableCell className="space-x-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => verifyIdMutation.mutate({ verificationId: v.id, status: 'verified' })}
+                  disabled={verifyIdMutation.isPending}
+                  data-testid={`button-approve-id-${v.id}`}
+                >
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => verifyIdMutation.mutate({ verificationId: v.id, status: 'rejected', reason: 'Document unclear or invalid' })}
+                  disabled={verifyIdMutation.isPending}
+                  data-testid={`button-reject-id-${v.id}`}
+                >
+                  Reject
+                </Button>
+              </TableCell>
+            )}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold" data-testid="text-id-verification-title">ID Verification Requests</h2>
+      
+      <Card data-testid="card-pending-verifications">
+        <CardHeader>
+          <CardTitle>Pending Review ({pendingVerifications.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {pendingVerifications.length > 0 ? (
+            <VerificationTable items={pendingVerifications} showActions={true} />
+          ) : (
+            <p className="text-muted-foreground" data-testid="text-no-pending">No pending verification requests</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {processedVerifications.length > 0 && (
+        <Card data-testid="card-processed-verifications">
+          <CardHeader>
+            <CardTitle>Previously Processed ({processedVerifications.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <VerificationTable items={processedVerifications} showActions={false} />
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 // Payment Verification View
 function PaymentVerificationView() {
   const { data: users, isLoading } = useQuery<any[]>({
@@ -457,12 +585,12 @@ function PaymentVerificationView() {
                     <TableCell>{user.firstName} {user.lastName}</TableCell>
                     <TableCell>
                       <Badge variant={user.kycVerified ? "default" : "secondary"}>
-                        {user.kycStatus}
+                        {user.kycStatus || (user.kycVerified ? 'Verified' : 'Pending')}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.paymentVerified ? "default" : "outline"}>
-                        {user.paymentVerified ? "✓ Verified" : "✗ Pending"}
+                        {user.paymentVerified ? "Verified" : "Pending"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -571,7 +699,8 @@ export default function AdminDashboard() {
     { title: "Properties", icon: Home, path: "/admin/properties" },
     { title: "Users", icon: Users, path: "/admin/users" },
     { title: "Hosts", icon: Building2, path: "/admin/hosts" },
-    { title: "Verification", icon: Shield, path: "/admin/verification" },
+    { title: "ID Verification", icon: Shield, path: "/admin/id-verification" },
+    { title: "Payment Verify", icon: DollarSign, path: "/admin/payment-verification" },
     { title: "Settings", icon: Settings, path: "/admin/settings" },
   ];
 
@@ -659,7 +788,8 @@ export default function AdminDashboard() {
 
           <main className="flex-1 overflow-auto p-6">
             {/* Show different content based on current view */}
-            {(currentView === 'verification') && <PaymentVerificationView />}
+            {(currentView === 'id-verification') && <IdVerificationView />}
+            {(currentView === 'payment-verification') && <PaymentVerificationView />}
             {(currentView === 'hosts') && <HostVerificationView />}
             {(currentView === 'dashboard' || currentView === 'admin') && (
               <>
@@ -815,20 +945,6 @@ export default function AdminDashboard() {
             
             {currentView === 'hosts' && (
               <HostsView />
-            )}
-            
-            {currentView === 'verification' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Verification</h2>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Pending Verifications</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">Verification requests coming soon</p>
-                  </CardContent>
-                </Card>
-              </div>
             )}
             
             {currentView === 'settings' && (

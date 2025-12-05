@@ -80,8 +80,14 @@ export default function Login() {
         return;
       }
 
-      toast({ title: "Success", description: isSignup ? "Account created! Please verify your ID." : "Logged in!" });
-      setLocation(isSignup ? "/verify-required" : "/");
+      const data = await response.json();
+      toast({ 
+        title: "Success", 
+        description: isSignup 
+          ? data.message || "Account created successfully! Welcome to StayHub." 
+          : "Welcome back!" 
+      });
+      setLocation("/");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       setLoading(false);

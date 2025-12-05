@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createInsertSchema } from "drizzle-zod";
-import { properties } from "@shared/schema";
+import { properties, Property } from "@shared/schema";
 
 const insertPropertySchema = createInsertSchema(properties).omit({ 
   id: true, 
@@ -22,11 +23,18 @@ const insertPropertySchema = createInsertSchema(properties).omit({
 
 interface CreatePropertyFormProps {
   onSuccess?: () => void;
+  propertyId?: string;
 }
 
-export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProps) {
+export default function CreatePropertyForm({ onSuccess, propertyId }: CreatePropertyFormProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const isEditing = !!propertyId;
+
+  const { data: existingProperty, isLoading: loadingProperty } = useQuery<Property>({
+    queryKey: ['/api/properties', propertyId],
+    enabled: isEditing,
+  });
 
   const form = useForm({
     resolver: zodResolver(insertPropertySchema),
@@ -53,25 +61,70 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
     },
   });
 
+  useEffect(() => {
+    if (existingProperty) {
+      form.reset({
+        title: existingProperty.title || "",
+        description: existingProperty.description || "",
+        propertyType: existingProperty.propertyType || "villa",
+        category: existingProperty.category || "luxury",
+        location: existingProperty.location || "",
+        guests: existingProperty.guests || 4,
+        bedrooms: existingProperty.bedrooms || 2,
+        beds: existingProperty.beds || 2,
+        bathrooms: existingProperty.bathrooms || 1,
+        amenities: [],
+        pricePerNight: String(existingProperty.pricePerNight) || "100",
+        cleaningFee: String(existingProperty.cleaningFee) || "30",
+        serviceFee: String(existingProperty.serviceFee) || "10",
+        taxRate: String(existingProperty.taxRate) || "0.0625",
+        minNights: existingProperty.minNights || 1,
+        maxNights: existingProperty.maxNights || 30,
+        weekendPriceMultiplier: String(existingProperty.weekendPriceMultiplier) || "1.0",
+        status: existingProperty.status || "active",
+        isActive: existingProperty.isActive !== false,
+      });
+    }
+  }, [existingProperty, form]);
+
   const createPropertyMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/properties", data);
-      return res.json();
+      if (isEditing) {
+        const res = await apiRequest("PATCH", `/api/properties/${propertyId}`, data);
+        return res.json();
+      } else {
+        const res = await apiRequest("POST", "/api/properties", data);
+        return res.json();
+      }
     },
     onSuccess: () => {
-      toast({ title: "Success", description: "Property created successfully" });
+      toast({ 
+        title: "Success", 
+        description: isEditing ? "Property updated successfully" : "Property created successfully" 
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/host/properties"] });
       queryClient.invalidateQueries({ queryKey: ["/api/host/stats"] });
+      if (propertyId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/properties", propertyId] });
+      }
       onSuccess?.();
     },
     onError: (error: any) => {
       toast({ 
         title: "Error", 
-        description: error.message || "Failed to create property",
+        description: error.message || `Failed to ${isEditing ? 'update' : 'create'} property`,
         variant: "destructive"
       });
     },
   });
+
+  if (isEditing && loadingProperty) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
@@ -79,15 +132,19 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
         <Button 
           variant="ghost" 
           size="sm"
-          onClick={() => navigate("/host")}
+          onClick={() => navigate("/host/properties")}
           data-testid="button-back"
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
-        <h1 className="text-3xl font-bold text-foreground">Create New Property</h1>
-        <p className="text-muted-foreground mt-1">Add a new property to your portfolio</p>
+        <h1 className="text-3xl font-bold text-foreground">
+          {isEditing ? "Edit Property" : "Create New Property"}
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          {isEditing ? "Update your property details" : "Add a new property to your portfolio"}
+        </p>
       </div>
 
       <Card>
@@ -95,7 +152,6 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
           <Form {...form}>
             <form onSubmit={form.handleSubmit((data) => createPropertyMutation.mutate(data))} className="space-y-6">
               
-              {/* Title */}
               <FormField
                 control={form.control}
                 name="title"
@@ -110,7 +166,6 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
                 )}
               />
 
-              {/* Description */}
               <FormField
                 control={form.control}
                 name="description"
@@ -125,7 +180,6 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
                 )}
               />
 
-              {/* Location */}
               <FormField
                 control={form.control}
                 name="location"
@@ -140,7 +194,6 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
                 )}
               />
 
-              {/* Property Type */}
               <FormField
                 control={form.control}
                 name="propertyType"
@@ -160,7 +213,6 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
                 )}
               />
 
-              {/* Pricing */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -190,7 +242,6 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
                 />
               </div>
 
-              {/* Capacity */}
               <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
@@ -246,12 +297,11 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
                 />
               </div>
 
-              {/* Submit */}
               <div className="flex gap-4 pt-6 border-t">
                 <Button 
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/host")}
+                  onClick={() => navigate("/host/properties")}
                   data-testid="button-cancel"
                 >
                   Cancel
@@ -262,7 +312,7 @@ export default function CreatePropertyForm({ onSuccess }: CreatePropertyFormProp
                   data-testid="button-submit-property"
                 >
                   {createPropertyMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Create Property
+                  {isEditing ? "Update Property" : "Create Property"}
                 </Button>
               </div>
             </form>
