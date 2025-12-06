@@ -13,8 +13,17 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createInsertSchema } from "drizzle-zod";
 import { properties, Property } from "@shared/schema";
+import { z } from "zod";
 
-const insertPropertySchema = createInsertSchema(properties).omit({ 
+// Create schema with coercion for number fields (HTML inputs return strings)
+const insertPropertySchema = createInsertSchema(properties, {
+  guests: z.coerce.number().int().min(1),
+  bedrooms: z.coerce.number().int().min(0),
+  beds: z.coerce.number().int().min(1),
+  bathrooms: z.coerce.number().int().min(1),
+  minNights: z.coerce.number().int().min(1),
+  maxNights: z.coerce.number().int().min(1),
+}).omit({ 
   id: true, 
   createdAt: true, 
   updatedAt: true,
