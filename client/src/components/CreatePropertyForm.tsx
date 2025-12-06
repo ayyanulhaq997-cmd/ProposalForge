@@ -16,6 +16,7 @@ import { properties, Property } from "@shared/schema";
 import { z } from "zod";
 
 // Create schema with coercion for number fields (HTML inputs return strings)
+// Decimal fields (pricePerNight, cleaningFee, etc.) are stored as strings in Drizzle
 const insertPropertySchema = createInsertSchema(properties, {
   guests: z.coerce.number().int().min(1),
   bedrooms: z.coerce.number().int().min(0),
@@ -23,6 +24,11 @@ const insertPropertySchema = createInsertSchema(properties, {
   bathrooms: z.coerce.number().int().min(1),
   minNights: z.coerce.number().int().min(1),
   maxNights: z.coerce.number().int().min(1),
+  pricePerNight: z.coerce.string().min(1, "Price is required"),
+  cleaningFee: z.coerce.string().optional(),
+  serviceFee: z.coerce.string().optional(),
+  taxRate: z.coerce.string().optional(),
+  weekendPriceMultiplier: z.coerce.string().optional(),
 }).omit({ 
   id: true, 
   createdAt: true, 

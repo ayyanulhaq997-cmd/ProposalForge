@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Send, Loader2, MessageSquare } from "lucide-react";
+import { Send, Loader2, MessageSquare, Headphones } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ interface Conversation {
 export default function Messages() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const params = new URLSearchParams(location.split('?')[1] || '');
   const conversationId = params.get('conversationId');
   
@@ -64,6 +64,23 @@ export default function Messages() {
     },
     onError: (error: any) => {
       toast({ title: "Error", description: "Failed to send message", variant: "destructive" });
+    },
+  });
+
+  // Start conversation with support/admin
+  const startSupportConversationMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/conversations', {
+        participantId: 'admin@stayhub.test',
+      });
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      navigate(`/messages?conversationId=${data.id}`);
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: "Failed to start support conversation", variant: "destructive" });
     },
   });
 
@@ -136,7 +153,7 @@ export default function Messages() {
     }
   };
 
-  // If no conversation selected, show list
+  // If no conversation selected, show list with option to contact support
   if (!conversationId) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -144,10 +161,40 @@ export default function Messages() {
         <main className="flex-1 flex items-center justify-center p-4">
           <Card className="w-full max-w-2xl p-8 text-center">
             <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-xl font-semibold mb-2">Messages</h2>
+            <h2 className="text-xl font-semibold mb-2" data-testid="text-messages-title">Messages</h2>
             <p className="text-muted-foreground mb-4">
-              {conversations?.length ? 'Select a conversation to view messages' : 'No conversations yet. Start by contacting a host!'}
+              {conversations?.length ? 'Select a conversation to view messages' : 'No conversations yet.'}
             </p>
+            
+            {conversations?.length ? (
+              <div className="space-y-2 text-left mb-6">
+                {conversations.map((conv) => (
+                  <Button
+                    key={conv.id}
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => navigate(`/messages?conversationId=${conv.id}`)}
+                    data-testid={`button-conversation-${conv.id}`}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Conversation {conv.id.slice(0, 8)}...
+                  </Button>
+                ))}
+              </div>
+            ) : null}
+            
+            <Button
+              onClick={() => startSupportConversationMutation.mutate()}
+              disabled={startSupportConversationMutation.isPending}
+              data-testid="button-contact-support"
+            >
+              {startSupportConversationMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Headphones className="h-4 w-4 mr-2" />
+              )}
+              Contact Support
+            </Button>
           </Card>
         </main>
       </div>

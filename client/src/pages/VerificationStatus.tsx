@@ -5,9 +5,17 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { IDVerificationUpload, IDVerificationStatus } from "@/components/IDVerificationUpload";
 import { Card, CardContent } from "@/components/ui/card";
 
+interface IDVerification {
+  id: string;
+  documentType: string;
+  status: 'pending' | 'verified' | 'rejected';
+  verifiedAt?: string;
+  rejectionReason?: string;
+}
+
 export default function VerificationStatus() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: verification, isLoading } = useQuery({
+  const { data: verification, isLoading } = useQuery<IDVerification | null>({
     queryKey: ['/api/user/verification'],
     enabled: isAuthenticated,
   });
