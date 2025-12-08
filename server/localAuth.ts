@@ -40,14 +40,16 @@ export function getSession() {
   const sessionStore = new MemStore({
     checkPeriod: sessionTtl,
   });
+  const isProduction = process.env.NODE_ENV === 'production';
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false,
+      secure: isProduction,
+      sameSite: 'lax',
       maxAge: sessionTtl,
     },
   });

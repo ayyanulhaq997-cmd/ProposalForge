@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { SiGoogle, SiFacebook } from "react-icons/si";
 
 export default function Login() {
@@ -81,6 +82,10 @@ export default function Login() {
       }
 
       const data = await response.json();
+      
+      // Invalidate auth cache to refresh user state
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
       toast({ 
         title: "Success", 
         description: isSignup 

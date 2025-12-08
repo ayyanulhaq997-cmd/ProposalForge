@@ -1228,6 +1228,26 @@ export class DatabaseStorage implements IStorage {
       verifiedAt: status === 'verified' ? new Date() : undefined,
       updatedAt: new Date(),
     }).where(eq(idVerifications.id, id)).returning();
+    
+    // Also update the user's idVerified field when verification is approved
+    if (updated) {
+      // Verify the user exists before updating
+      const [existingUser] = await db.select().from(users).where(eq(users.id, updated.userId));
+      if (existingUser) {
+        if (status === 'verified') {
+          await db.update(users).set({
+            idVerified: true,
+          }).where(eq(users.id, updated.userId));
+        } else if (status === 'rejected') {
+          await db.update(users).set({
+            idVerified: false,
+          }).where(eq(users.id, updated.userId));
+        }
+      } else {
+        console.warn(`Warning: Verification ${id} references non-existent user ${updated.userId}`);
+      }
+    }
+    
     return updated;
   }
 

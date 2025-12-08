@@ -27,16 +27,16 @@ localPort = 33541
 externalPort = 5000
 
 [[ports]]
+localPort = 33543
+externalPort = 8081
+
+[[ports]]
 localPort = 33955
 externalPort = 8008
 
 [[ports]]
 localPort = 35891
 externalPort = 6800
-
-[[ports]]
-localPort = 37027
-externalPort = 8081
 
 [[ports]]
 localPort = 37691
@@ -92,6 +92,7 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_websocket:1.0.0", "javascript_database:1.0.0", "javascript_log_in_with_replit:1.0.0", "stripe:1.0.0", "javascript_openai:1.0.0"]
+expertMode = true
 
 [userenv]
 
