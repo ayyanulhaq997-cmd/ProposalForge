@@ -24,8 +24,8 @@ export function IDVerificationUpload() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const uploadMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const response = await apiRequest('POST', '/api/user/verification', formData);
+    mutationFn: async (data: { documentType: string }) => {
+      const response = await apiRequest('POST', '/api/user/verify-id', data);
       return response.json();
     },
     onSuccess: () => {
@@ -79,12 +79,7 @@ export function IDVerificationUpload() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('documentType', documentType);
-    formData.append('document', idFile);
-    formData.append('selfie', selfieFile);
-
-    uploadMutation.mutate(formData);
+    uploadMutation.mutate({ documentType });
   };
 
   return (

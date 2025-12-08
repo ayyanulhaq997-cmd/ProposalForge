@@ -13,12 +13,17 @@ interface IDVerification {
   rejectionReason?: string;
 }
 
+interface VerificationResponse {
+  verification: IDVerification | null;
+}
+
 export default function VerificationStatus() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: verification, isLoading } = useQuery<IDVerification | null>({
+  const { data: response, isLoading } = useQuery<VerificationResponse>({
     queryKey: ['/api/user/verification'],
     enabled: isAuthenticated,
   });
+  const verification = response?.verification;
 
   if (authLoading || isLoading) {
     return (

@@ -24,14 +24,19 @@ interface IDVerification {
   rejectionReason?: string;
 }
 
+interface VerificationResponse {
+  verification: VerificationData | null;
+}
+
 export default function VerificationRequired() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
 
-  const { data: verification, isLoading } = useQuery<VerificationData>({
+  const { data: response, isLoading } = useQuery<VerificationResponse>({
     queryKey: ['/api/user/verification'],
     enabled: isAuthenticated,
   });
+  const verification = response?.verification;
 
   useEffect(() => {
     // Redirect to login if not authenticated
