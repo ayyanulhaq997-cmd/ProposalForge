@@ -5,6 +5,14 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+interface IDVerification {
+  id: string;
+  documentType: string;
+  status: 'pending' | 'verified' | 'rejected';
+  verifiedAt?: string;
+  rejectionReason?: string;
+}
+
 interface RequireVerificationProps {
   children: React.ReactNode;
 }
@@ -13,9 +21,11 @@ export function RequireVerification({ children }: RequireVerificationProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
 
-  const { data: verification, isLoading: verifyLoading } = useQuery({
+  const { data: verification, isLoading: verifyLoading } = useQuery<IDVerification | null>({
     queryKey: ['/api/user/verification'],
     enabled: isAuthenticated,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   if (authLoading || verifyLoading) {

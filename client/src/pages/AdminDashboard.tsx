@@ -423,6 +423,9 @@ function IdVerificationView() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/id-verifications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/verification'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users-for-verification'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({ title: "Success", description: "ID verification updated" });
     },
     onError: (error: any) => {
@@ -550,6 +553,8 @@ function PaymentVerificationView() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users-for-verification'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/verification'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({ title: "Success", description: "Payment verification updated" });
     },
     onError: (error: any) => {
@@ -686,10 +691,16 @@ export default function AdminDashboard() {
   const currentView = location.split('/').pop() || 'dashboard';
   const { data: stats, isLoading } = useQuery<any>({
     queryKey: ['/api/admin/stats'],
+    staleTime: 0,
+    refetchOnMount: 'always',
+    enabled: isAuthenticated && isAdmin,
   });
 
   const { data: recentBookings } = useQuery<any[]>({
     queryKey: ['/api/admin/bookings/recent'],
+    staleTime: 0,
+    refetchOnMount: 'always',
+    enabled: isAuthenticated && isAdmin,
   });
 
   const menuItems = [

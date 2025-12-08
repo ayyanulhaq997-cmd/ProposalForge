@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, CreditCard, Shield, AlertCircle, Calendar, CheckCircle2 } from "lucide-react";
+import { Loader2, CreditCard, Shield, AlertCircle, Calendar, CheckCircle2, UserCheck } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,13 +12,35 @@ import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { StripePaymentForm } from "@/components/StripePaymentForm";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import type { Property } from "@shared/schema";
 import { format } from "date-fns";
+
+interface IDVerification {
+  id: string;
+  documentType: string;
+  status: 'pending' | 'verified' | 'rejected';
+  verifiedAt?: string;
+  rejectionReason?: string;
+}
 
 export default function Booking() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  
+  const { data: verification, isLoading: verificationLoading } = useQuery<IDVerification | null>({
+    queryKey: ['/api/user/verification'],
+    enabled: isAuthenticated,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
+  const isVerified = verification?.status === 'verified';
+  const isPendingVerification = verification?.status === 'pending';
+  const isRejectedVerification = verification?.status === 'rejected';
+  const hasPaymentVerification = (user as any)?.paymentVerified === true;
   // Use window.location.search to get query params (wouter location doesn't include them)
   const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   
@@ -131,6 +153,26 @@ export default function Booking() {
 
   const handleReserveClick = () => {
     if (!isFormValid || !checkInDate || !checkOutDate) return;
+    
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to make a booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!isVerified) {
+      toast({
+        title: "Verification Required",
+        description: isPendingVerification 
+          ? "Your ID verification is still pending. Please wait for admin approval."
+          : "Please complete ID verification before booking.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Format dates in local timezone (not UTC) to avoid 1-day offset
     const formatDateLocal = (date: Date): string => {
@@ -517,30 +559,73 @@ export default function Booking() {
                         </div>
                       </div>
 
-                      <Button
-                        className="w-full"
-                        size="lg"
-                        onClick={handleReserveClick}
-                        disabled={bookingMutation.isPending}
-                        data-testid="button-reserve"
-                      >
-                        {bookingMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Proceeding to payment...
-                          </>
-                        ) : (
-                          <>
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            Proceed to Payment
-                          </>
-                        )}
-                      </Button>
+                      {!isAuthenticated ? (
+                        <div className="space-y-3">
+                          <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20">
+                            <UserCheck className="h-4 w-4 text-blue-600" />
+                            <AlertDescription className="text-sm text-blue-900 dark:text-blue-300">
+                              Please log in to proceed with your booking
+                            </AlertDescription>
+                          </Alert>
+                          <Button
+                            className="w-full"
+                            size="lg"
+                            onClick={() => navigate("/login")}
+                            data-testid="button-login-to-book"
+                          >
+                            Log in to Book
+                          </Button>
+                        </div>
+                      ) : !isVerified ? (
+                        <div className="space-y-3">
+                          <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-900/20">
+                            <Shield className="h-4 w-4 text-amber-600" />
+                            <AlertDescription className="text-sm text-amber-900 dark:text-amber-300">
+                              {isPendingVerification 
+                                ? "Your ID verification is pending admin approval. Please wait for confirmation."
+                                : isRejectedVerification
+                                ? `ID verification was rejected: ${verification?.rejectionReason || 'Please resubmit your documents'}`
+                                : "Complete KYC verification to proceed with booking"}
+                            </AlertDescription>
+                          </Alert>
+                          <Button
+                            className="w-full"
+                            size="lg"
+                            onClick={() => navigate("/verify")}
+                            data-testid="button-complete-kyc"
+                          >
+                            <UserCheck className="mr-2 h-4 w-4" />
+                            {isPendingVerification ? "Check Verification Status" : "Complete KYC Verification"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <Button
+                            className="w-full"
+                            size="lg"
+                            onClick={handleReserveClick}
+                            disabled={bookingMutation.isPending}
+                            data-testid="button-reserve"
+                          >
+                            {bookingMutation.isPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Proceeding to payment...
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                Proceed to Payment
+                              </>
+                            )}
+                          </Button>
 
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
-                        <Shield className="h-4 w-4" />
-                        <span>No charge yet</span>
-                      </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
+                            <Shield className="h-4 w-4" />
+                            <span>No charge yet</span>
+                          </div>
+                        </>
+                      )}
                     </>
                   ) : step === 'payment' && isFormValid ? (
                     <div className="text-center py-8">
