@@ -235,7 +235,7 @@ export function IDVerificationUpload() {
 }
 
 export function IDVerificationStatus({ verification }: { verification?: IDVerification }) {
-  if (!verification) {
+  if (!verification || !verification.status) {
     return null;
   }
 
@@ -246,6 +246,9 @@ export function IDVerificationStatus({ verification }: { verification?: IDVerifi
   };
 
   const config = statusConfig[verification.status];
+  if (!config) {
+    return null;
+  }
   const Icon = config.icon;
 
   return (

@@ -16,6 +16,14 @@ interface VerificationData {
   rejectionReason?: string;
 }
 
+interface IDVerification {
+  id: string;
+  documentType: string;
+  status: 'pending' | 'verified' | 'rejected';
+  verifiedAt?: string;
+  rejectionReason?: string;
+}
+
 export default function VerificationRequired() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
@@ -32,6 +40,13 @@ export default function VerificationRequired() {
     }
   }, [isAuthenticated, authLoading, setLocation]);
 
+  // Redirect verified users to home - must be before any conditional returns
+  useEffect(() => {
+    if (verification?.status === 'verified') {
+      setLocation('/');
+    }
+  }, [verification?.status, setLocation]);
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -42,12 +57,8 @@ export default function VerificationRequired() {
       </div>
     );
   }
-
-  // Verified - redirect to home
+  
   if (verification?.status === 'verified') {
-    useEffect(() => {
-      setLocation('/');
-    }, []);
     return null;
   }
 
@@ -102,7 +113,11 @@ export default function VerificationRequired() {
                 </Card>
               )}
 
-              <IDVerificationStatus verification={verification} />
+              {verification.id && verification.status && verification.documentType && (
+                <IDVerificationStatus 
+                  verification={verification as IDVerification} 
+                />
+              )}
             </div>
           )}
 

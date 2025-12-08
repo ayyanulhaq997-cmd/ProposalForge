@@ -15,6 +15,7 @@ import {
   Edit2,
   Save,
   X,
+  RefreshCw,
 } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,8 +48,10 @@ import { useToast } from "@/hooks/use-toast";
 
 // Properties Management View
 function PropertiesView() {
-  const { data: properties, isLoading } = useQuery<any[]>({
+  const { data: properties, isLoading, refetch, isFetching } = useQuery<any[]>({
     queryKey: ['/api/admin/properties'],
+    refetchInterval: 10000,
+    staleTime: 0,
   });
 
   if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
@@ -99,8 +102,10 @@ function PropertiesView() {
 
 // Hosts Management View
 function HostsView() {
-  const { data: hosts, isLoading } = useQuery<any[]>({
+  const { data: hosts, isLoading, refetch, isFetching } = useQuery<any[]>({
     queryKey: ['/api/admin/hosts'],
+    refetchInterval: 10000,
+    staleTime: 0,
   });
 
   if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
@@ -327,8 +332,10 @@ function ActivityView() {
 
 // Host Verification View
 function HostVerificationView() {
-  const { data: hosts, isLoading } = useQuery<any[]>({
+  const { data: hosts, isLoading, refetch, isFetching } = useQuery<any[]>({
     queryKey: ['/api/admin/host-verification-requests'],
+    refetchInterval: 10000,
+    staleTime: 0,
   });
   const { toast } = useToast();
 
@@ -409,8 +416,10 @@ function HostVerificationView() {
 
 // ID Verification View
 function IdVerificationView() {
-  const { data: verifications, isLoading } = useQuery<any[]>({
+  const { data: verifications, isLoading, refetch, isFetching } = useQuery<any[]>({
     queryKey: ['/api/admin/id-verifications'],
+    refetchInterval: 10000,
+    staleTime: 0,
   });
   const { toast } = useToast();
 
@@ -509,7 +518,19 @@ function IdVerificationView() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold" data-testid="text-id-verification-title">ID Verification Requests</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-2xl font-bold" data-testid="text-id-verification-title">ID Verification Requests</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          data-testid="button-refresh-verifications"
+        >
+          <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
       
       <Card data-testid="card-pending-verifications">
         <CardHeader>
@@ -540,8 +561,10 @@ function IdVerificationView() {
 
 // Payment Verification View
 function PaymentVerificationView() {
-  const { data: users, isLoading } = useQuery<any[]>({
+  const { data: users, isLoading, refetch, isFetching } = useQuery<any[]>({
     queryKey: ['/api/admin/users-for-verification'],
+    refetchInterval: 10000,
+    staleTime: 0,
   });
   const { toast } = useToast();
 
