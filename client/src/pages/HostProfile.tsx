@@ -5,6 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import type { User, Property, Review } from "@shared/schema";
 
 interface HostProfileData {
@@ -21,13 +24,32 @@ interface HostProfileData {
 }
 
 export default function HostProfile() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const hostId = location.split('/').pop() || '';
+  const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
 
   const { data, isLoading } = useQuery<HostProfileData>({
     queryKey: ['/api/hosts', hostId],
     enabled: !!hostId,
   });
+
+  const handleContactHost = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    if (!hostId) return;
+    try {
+      const response = await apiRequest('POST', '/api/conversations', {
+        participantId: hostId
+      });
+      const conversation = await response.json();
+      navigate(`/messages?conversationId=${conversation.id}`);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to start conversation", variant: "destructive" });
+    }
+  };
 
   if (!hostId || isLoading) {
     return (
@@ -93,7 +115,11 @@ export default function HostProfile() {
                 </div>
               </div>
 
-              <Button data-testid="button-contact-host" className="bg-primary">
+              <Button 
+                data-testid="button-contact-host" 
+                className="bg-primary"
+                onClick={handleContactHost}
+              >
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Contact Host
               </Button>

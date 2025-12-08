@@ -30,13 +30,14 @@ export default function Booking() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   
-  const { data: verification, isLoading: verificationLoading } = useQuery<IDVerification | null>({
+  const { data: verificationData, isLoading: verificationLoading } = useQuery<{ verification: IDVerification | null }>({
     queryKey: ['/api/user/verification'],
     enabled: isAuthenticated,
     staleTime: 0,
     refetchOnMount: 'always',
   });
 
+  const verification = verificationData?.verification;
   const isVerified = verification?.status === 'verified';
   const isPendingVerification = verification?.status === 'pending';
   const isRejectedVerification = verification?.status === 'rejected';

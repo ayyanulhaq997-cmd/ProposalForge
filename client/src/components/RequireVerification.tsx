@@ -21,12 +21,14 @@ export function RequireVerification({ children }: RequireVerificationProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
 
-  const { data: verification, isLoading: verifyLoading } = useQuery<IDVerification | null>({
+  const { data: verificationData, isLoading: verifyLoading } = useQuery<{ verification: IDVerification | null }>({
     queryKey: ['/api/user/verification'],
     enabled: isAuthenticated,
     staleTime: 0,
     refetchOnMount: 'always',
   });
+
+  const verification = verificationData?.verification;
 
   if (authLoading || verifyLoading) {
     return (

@@ -2384,10 +2384,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/user/verification/:id', [isAuthenticated, requireRoles(ROLES.ADMIN)], async (req: any, res: any) => {
     try {
       const { status, rejectionReason } = req.body;
+      
+      if (!status || !['verified', 'rejected', 'pending'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status. Must be verified, rejected, or pending.' });
+      }
+      
       const verification = await storage.updateIdVerificationStatus(req.params.id, status, rejectionReason);
+      
+      if (!verification) {
+        return res.status(404).json({ message: 'Verification not found' });
+      }
+      
       res.json({ verification });
     } catch (error: any) {
-      res.status(400).json({ message: 'Failed to update verification' });
+      console.error('Error updating verification:', error);
+      res.status(500).json({ message: error.message || 'Failed to update verification' });
     }
   });
 
