@@ -21,6 +21,7 @@ export function IDVerificationUpload() {
   const [idFile, setIdFile] = useState<File | null>(null);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [showSelfieCapture, setShowSelfieCapture] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const uploadMutation = useMutation({
@@ -40,9 +41,16 @@ export function IDVerificationUpload() {
 
   const handleCaptureSelfie = async () => {
     try {
+      setIsVideoReady(false);
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+        };
+        videoRef.current.onplaying = () => {
+          setIsVideoReady(true);
+        };
       }
       setShowSelfieCapture(true);
     } catch (err) {
@@ -51,7 +59,7 @@ export function IDVerificationUpload() {
   };
 
   const handleTakeSelfie = () => {
-    if (videoRef.current) {
+    if (videoRef.current && videoRef.current.videoWidth > 0 && videoRef.current.videoHeight > 0) {
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
@@ -61,11 +69,14 @@ export function IDVerificationUpload() {
         if (blob) {
           setSelfieFile(new File([blob], 'selfie.jpg', { type: 'image/jpeg' }));
           setShowSelfieCapture(false);
+          setIsVideoReady(false);
           const stream = videoRef.current?.srcObject as MediaStream;
           stream?.getTracks().forEach(track => track.stop());
           toast({ title: "Success", description: "Selfie captured" });
         }
       }, 'image/jpeg');
+    } else {
+      toast({ title: "Please wait", description: "Camera is still loading...", variant: "destructive" });
     }
   };
 
@@ -193,15 +204,17 @@ export function IDVerificationUpload() {
                 <div className="flex gap-2">
                   <Button
                     onClick={handleTakeSelfie}
+                    disabled={!isVideoReady}
                     className="flex-1"
                     data-testid="button-take-photo"
                   >
-                    Take Photo
+                    {isVideoReady ? "Take Photo" : "Loading camera..."}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => {
                       setShowSelfieCapture(false);
+                      setIsVideoReady(false);
                       const stream = videoRef.current?.srcObject as MediaStream;
                       stream?.getTracks().forEach(track => track.stop());
                     }}
