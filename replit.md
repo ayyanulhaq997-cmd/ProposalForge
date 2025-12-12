@@ -177,3 +177,67 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 - **Database Setup**: `npm run db:push` applies Drizzle schema to database
 - **Start Production**: `npm start` runs compiled server from `dist/index.js`
 - **Static Assets**: Served from `dist/public` in production mode
+
+## Payment Integration Setup
+
+### Stripe Setup (Primary Gateway)
+
+1. **Create Stripe Account**: Sign up at https://dashboard.stripe.com/register
+
+2. **Get API Keys**:
+   - Go to Dashboard → Developers → API keys
+   - Copy `Publishable key` (starts with `pk_test_` or `pk_live_`)
+   - Copy `Secret key` (starts with `sk_test_` or `sk_live_`)
+
+3. **Set Environment Variables**:
+   ```
+   STRIPE_SECRET_KEY=sk_test_your_secret_key
+   STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
+   ```
+
+4. **Configure Webhook** (for payment confirmations):
+   - Go to Dashboard → Developers → Webhooks
+   - Add endpoint: `https://your-domain.com/api/stripe/webhook`
+   - Select events: `payment_intent.succeeded`, `checkout.session.completed`
+   - Copy webhook secret and set: `STRIPE_WEBHOOK_SECRET=whsec_your_secret`
+
+5. **Test Mode**: Use test keys for development. Test card: `4242 4242 4242 4242`
+
+### Square Setup (Secondary Gateway)
+
+1. **Create Square Developer Account**: Sign up at https://developer.squareup.com
+
+2. **Create Application**:
+   - Go to Applications → Create Application
+   - Copy Application ID and Access Token
+
+3. **Set Environment Variables**:
+   ```
+   SQUARE_ACCESS_TOKEN=your_access_token
+   SQUARE_APPLICATION_ID=your_application_id
+   SQUARE_LOCATION_ID=your_location_id
+   SQUARE_ENVIRONMENT=sandbox (or production)
+   ```
+
+4. **Get Location ID**:
+   - Go to Square Dashboard → Locations
+   - Copy the Location ID for your business
+
+5. **Sandbox Testing**: Use sandbox credentials for development before going live
+
+### Payment Flow
+
+1. Guest selects property and dates
+2. System creates booking with `pending` status
+3. Payment form collects card details (Stripe Elements)
+4. Payment intent created and processed
+5. On success, booking status updates to `confirmed`
+6. Host receives notification of new booking
+7. Commission (15% default) calculated and tracked
+
+### Refund Processing
+
+Refunds are handled through the admin dashboard or can be triggered via the API:
+- Full refunds: Original payment amount returned
+- Partial refunds: Specify amount to refund
+- Cancellation fees can be configured per property

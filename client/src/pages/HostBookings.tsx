@@ -65,6 +65,12 @@ function BookingsContent() {
             </div>
             <p className="text-sm text-muted-foreground mb-1" data-testid={`text-guest-${booking.id}`}>Guest ID: {booking.guestId || 'Guest'}</p>
             <p className="text-sm text-muted-foreground mb-2" data-testid={`text-property-${booking.id}`}>Property ID: {booking.propertyId}</p>
+            {booking.specialRequests && (
+              <div className="mb-3 p-3 bg-muted/50 rounded-md border" data-testid={`section-special-requests-${booking.id}`}>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Special Requests:</p>
+                <p className="text-sm" data-testid={`text-special-requests-${booking.id}`}>{booking.specialRequests}</p>
+              </div>
+            )}
             <p className="text-sm" data-testid={`text-dates-${booking.id}`}>
               <span className="font-semibold">
                 {format(new Date(booking.checkIn), 'MMM d')}

@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, X, ImageIcon } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,9 @@ export default function CreatePropertyForm({ onSuccess, propertyId }: CreateProp
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const isEditing = !!propertyId;
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: existingProperty, isLoading: loadingProperty } = useQuery<Property>({
     queryKey: ['/api/properties', propertyId],
@@ -99,16 +102,67 @@ export default function CreatePropertyForm({ onSuccess, propertyId }: CreateProp
         status: existingProperty.status || "active",
         isActive: existingProperty.isActive !== false,
       });
+      // Load existing images when editing
+      if (existingProperty.images && Array.isArray(existingProperty.images)) {
+        setUploadedImages(existingProperty.images as string[]);
+      }
     }
   }, [existingProperty, form]);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingImages(true);
+    const newImages: string[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Convert file to base64 for storage
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+        });
+        reader.readAsDataURL(file);
+        const base64 = await base64Promise;
+        newImages.push(base64);
+      }
+
+      setUploadedImages(prev => [...prev, ...newImages]);
+      toast({
+        title: "Images uploaded",
+        description: `${newImages.length} image(s) added successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload one or more images",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImages(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const createPropertyMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Include uploaded images in the property data
+      const propertyData = { ...data, images: uploadedImages };
       if (isEditing) {
-        const res = await apiRequest("PATCH", `/api/properties/${propertyId}`, data);
+        const res = await apiRequest("PATCH", `/api/properties/${propertyId}`, propertyData);
         return res.json();
       } else {
-        const res = await apiRequest("POST", "/api/properties", data);
+        const res = await apiRequest("POST", "/api/properties", propertyData);
         return res.json();
       }
     },
@@ -310,6 +364,73 @@ export default function CreatePropertyForm({ onSuccess, propertyId }: CreateProp
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* Image Upload Section */}
+              <div className="space-y-4">
+                <FormLabel>Property Photos</FormLabel>
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    data-testid="input-images"
+                  />
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground text-center">
+                      Upload photos of your property
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingImages}
+                      data-testid="button-upload-images"
+                    >
+                      {isUploadingImages ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Choose Images
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Image Preview Grid */}
+                {uploadedImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-4" data-testid="image-preview-grid">
+                    {uploadedImages.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={image}
+                          alt={`Property image ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-md"
+                          data-testid={`image-preview-${index}`}
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeImage(index)}
+                          data-testid={`button-remove-image-${index}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-4 pt-6 border-t">

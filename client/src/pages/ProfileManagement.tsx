@@ -192,7 +192,7 @@ export default function ProfileManagement() {
             </p>
           </div>
 
-          {verification && (
+          {verification && verification.createdAt && (
             <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-3 text-sm">
               <p>Submitted: {new Date(verification.createdAt).toLocaleDateString()}</p>
             </div>
