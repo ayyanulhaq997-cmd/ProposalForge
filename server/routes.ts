@@ -972,6 +972,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Failed to create booking" });
       }
 
+      // Create host-guest verification record only if guest has a verified ID
+      if (userId && property.hostId) {
+        const guestVerification = await storage.getIdVerification(userId);
+        if (guestVerification && guestVerification.status === 'verified') {
+          // Check if host-guest verification already exists
+          const existingHostGuestVerif = await storage.getHostGuestVerification(property.hostId, userId);
+          if (!existingHostGuestVerif) {
+            await storage.createHostGuestVerification(property.hostId, userId, guestVerification.id);
+          }
+        }
+      }
+
       // Create notification for host (only if host exists)
       if (property.hostId) {
         await storage.createNotification({
@@ -1601,6 +1613,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching ID verifications:", error);
       res.status(500).json({ message: "Failed to fetch ID verifications" });
+    }
+  });
+
+  // ============================================================================
+  // HOST-SPECIFIC GUEST VERIFICATION ROUTES
+  // ============================================================================
+
+  // Get guest verification status for a specific host
+  app.get('/api/host/guest-verification/:guestId', isAuthenticated, requireRoles(ROLES.HOST, ROLES.ADMIN), async (req: any, res: any) => {
+    try {
+      const hostId = req.user?.id;
+      const { guestId } = req.params;
+      
+      const verification = await storage.getHostGuestVerification(hostId, guestId);
+      res.json({ verification });
+    } catch (error: any) {
+      console.error("Error fetching host-guest verification:", error);
+      res.status(500).json({ message: "Failed to fetch verification status" });
+    }
+  });
+
+  // Get all pending guest verifications for a host
+  app.get('/api/host/pending-guest-verifications', isAuthenticated, requireRoles(ROLES.HOST, ROLES.ADMIN), async (req: any, res: any) => {
+    try {
+      const hostId = req.user?.id;
+      const verifications = await storage.getHostPendingGuestVerifications(hostId);
+      res.json(verifications);
+    } catch (error: any) {
+      console.error("Error fetching pending verifications:", error);
+      res.status(500).json({ message: "Failed to fetch pending verifications" });
+    }
+  });
+
+  // Host approves or rejects a guest's verification
+  app.patch('/api/host/guest-verification/:id', isAuthenticated, requireRoles(ROLES.HOST, ROLES.ADMIN), async (req: any, res: any) => {
+    try {
+      const hostId = req.user?.id;
+      const { id } = req.params;
+      const { approved, notes } = req.body;
+      
+      // Validate input
+      if (typeof approved !== 'boolean') {
+        return res.status(400).json({ message: "approved must be a boolean" });
+      }
+      
+      // Require notes when rejecting
+      if (!approved && (!notes || typeof notes !== 'string' || notes.trim() === '')) {
+        return res.status(400).json({ message: "notes are required when rejecting verification" });
+      }
+      
+      const status = approved ? 'approved' : 'rejected';
+      const cleanNotes = notes && typeof notes === 'string' ? notes.trim() || null : null;
+      const verification = await storage.updateHostGuestVerification(id, hostId, status, cleanNotes || undefined);
+      
+      if (!verification) {
+        return res.status(404).json({ message: "Verification not found or not authorized" });
+      }
+
+      await storage.createAuditLog({
+        userId: hostId,
+        action: approved ? 'APPROVE_GUEST_VERIFICATION' : 'REJECT_GUEST_VERIFICATION',
+        entityType: 'host_guest_verification',
+        entityId: id,
+        changes: { status, notes }
+      });
+
+      res.json({ 
+        message: approved ? "Guest verified for your properties" : "Guest verification rejected",
+        verification 
+      });
+    } catch (error: any) {
+      console.error("Error updating guest verification:", error);
+      res.status(500).json({ message: error.message || "Failed to update verification" });
     }
   });
 

@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
+  uniqueIndex,
   jsonb,
   pgTable,
   text,
@@ -453,6 +454,29 @@ export const idVerifications = pgTable("id_verifications", {
 export const insertIdVerificationSchema = createInsertSchema(idVerifications).omit({ id: true, verifiedAt: true, createdAt: true, updatedAt: true });
 export type InsertIdVerification = z.infer<typeof insertIdVerificationSchema>;
 export type IdVerification = typeof idVerifications.$inferSelect;
+
+// ============================================================================
+// HOST-SPECIFIC GUEST VERIFICATIONS
+// ============================================================================
+
+export const hostGuestVerifications = pgTable("host_guest_verifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  hostId: varchar("host_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  guestId: varchar("guest_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  verificationId: varchar("verification_id").notNull().references(() => idVerifications.id, { onDelete: 'cascade' }),
+  status: varchar("status", { length: 20 }).default('pending'), // pending, approved, rejected
+  notes: text("notes"),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: varchar("approved_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("idx_host_guest_unique").on(table.hostId, table.guestId),
+]);
+
+export const insertHostGuestVerificationSchema = createInsertSchema(hostGuestVerifications).omit({ id: true, approvedAt: true, createdAt: true, updatedAt: true });
+export type InsertHostGuestVerification = z.infer<typeof insertHostGuestVerificationSchema>;
+export type HostGuestVerification = typeof hostGuestVerifications.$inferSelect;
 
 // ============================================================================
 // USER PROFILE PREFERENCES

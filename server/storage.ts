@@ -21,6 +21,7 @@ import {
   seasonalPricingRules,
   pushNotifications,
   chatFiles,
+  hostGuestVerifications,
   type User,
   type UpsertUser,
   type Property,
@@ -65,6 +66,8 @@ import {
   type InsertPushNotification,
   type ChatFile,
   type InsertChatFile,
+  type HostGuestVerification,
+  type InsertHostGuestVerification,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, asc, sql, or, like, inArray } from "drizzle-orm";
@@ -365,6 +368,12 @@ export interface IStorage {
   updateIdVerificationStatus(id: string, status: string, rejectionReason?: string): Promise<IdVerification | undefined>;
   getPendingVerifications(): Promise<IdVerification[]>;
   getAllIdVerifications(): Promise<IdVerification[]>;
+
+  // Host-specific Guest Verification operations
+  createHostGuestVerification(hostId: string, guestId: string, verificationId: string): Promise<HostGuestVerification>;
+  getHostGuestVerification(hostId: string, guestId: string): Promise<HostGuestVerification | undefined>;
+  getHostPendingGuestVerifications(hostId: string): Promise<HostGuestVerification[]>;
+  updateHostGuestVerification(id: string, hostId: string, status: string, notes?: string): Promise<HostGuestVerification | undefined>;
 
   // User Profile operations
   createOrUpdateUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
@@ -1257,6 +1266,52 @@ export class DatabaseStorage implements IStorage {
 
   async getAllIdVerifications(): Promise<IdVerification[]> {
     return await db.select().from(idVerifications).orderBy(desc(idVerifications.createdAt));
+  }
+
+  // ============================================================================
+  // HOST-SPECIFIC GUEST VERIFICATIONS
+  // ============================================================================
+
+  async createHostGuestVerification(hostId: string, guestId: string, verificationId: string): Promise<HostGuestVerification> {
+    const [created] = await db.insert(hostGuestVerifications).values({
+      hostId,
+      guestId,
+      verificationId,
+      status: 'pending',
+    }).returning();
+    return created;
+  }
+
+  async getHostGuestVerification(hostId: string, guestId: string): Promise<HostGuestVerification | undefined> {
+    const [verification] = await db.select().from(hostGuestVerifications)
+      .where(and(
+        eq(hostGuestVerifications.hostId, hostId),
+        eq(hostGuestVerifications.guestId, guestId)
+      ));
+    return verification;
+  }
+
+  async getHostPendingGuestVerifications(hostId: string): Promise<HostGuestVerification[]> {
+    return await db.select().from(hostGuestVerifications)
+      .where(and(
+        eq(hostGuestVerifications.hostId, hostId),
+        eq(hostGuestVerifications.status, 'pending')
+      ))
+      .orderBy(desc(hostGuestVerifications.createdAt));
+  }
+
+  async updateHostGuestVerification(id: string, hostId: string, status: string, notes?: string): Promise<HostGuestVerification | undefined> {
+    const [updated] = await db.update(hostGuestVerifications).set({
+      status,
+      notes,
+      approvedAt: status === 'approved' ? new Date() : undefined,
+      approvedBy: status === 'approved' ? hostId : undefined,
+      updatedAt: new Date(),
+    }).where(and(
+      eq(hostGuestVerifications.id, id),
+      eq(hostGuestVerifications.hostId, hostId)
+    )).returning();
+    return updated;
   }
 
   // ============================================================================
