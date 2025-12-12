@@ -9,6 +9,7 @@ import { HostDashboardLayout } from "@/components/HostDashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { parseDateString } from "@/lib/utils";
 import type { Booking } from "@shared/schema";
 
 function BookingsContent() {
@@ -73,11 +74,11 @@ function BookingsContent() {
             )}
             <p className="text-sm" data-testid={`text-dates-${booking.id}`}>
               <span className="font-semibold">
-                {format(new Date(booking.checkIn), 'MMM d')}
+                {parseDateString(booking.checkIn as string) ? format(parseDateString(booking.checkIn as string)!, 'MMM d') : 'N/A'}
               </span>
               {' '}-{' '}
               <span className="font-semibold">
-                {format(new Date(booking.checkOut), 'MMM d, yyyy')}
+                {parseDateString(booking.checkOut as string) ? format(parseDateString(booking.checkOut as string)!, 'MMM d, yyyy') : 'N/A'}
               </span>
             </p>
           </div>

@@ -108,6 +108,8 @@ export default function Messages() {
               return updated;
             });
           }, 3000);
+        } else if (data.type === 'message') {
+          queryClient.invalidateQueries({ queryKey: [`/api/conversations/${conversationId}/messages`] });
         }
       } catch (error) {
         console.error('WebSocket parse error:', error);

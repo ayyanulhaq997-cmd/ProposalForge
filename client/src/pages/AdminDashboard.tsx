@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { parseDateString } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 // Properties Management View
@@ -219,7 +220,7 @@ function BookingsView() {
                           data-testid="input-checkin"
                         />
                       ) : (
-                        new Date(booking.checkIn).toLocaleDateString()
+                        parseDateString(booking.checkIn as string)?.toLocaleDateString() || 'N/A'
                       )}
                     </TableCell>
                     <TableCell>
@@ -232,7 +233,7 @@ function BookingsView() {
                           data-testid="input-checkout"
                         />
                       ) : (
-                        new Date(booking.checkOut).toLocaleDateString()
+                        parseDateString(booking.checkOut as string)?.toLocaleDateString() || 'N/A'
                       )}
                     </TableCell>
                     <TableCell>

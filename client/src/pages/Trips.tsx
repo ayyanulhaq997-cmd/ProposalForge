@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Booking } from "@shared/schema";
 import { format } from "date-fns";
+import { parseDateString } from "@/lib/utils";
 
 export default function Trips() {
   const [, navigate] = useLocation();
@@ -20,8 +21,8 @@ export default function Trips() {
   });
 
   const BookingCard = ({ booking }: { booking: Booking }) => {
-    const checkIn = booking.checkIn ? new Date(booking.checkIn) : null;
-    const checkOut = booking.checkOut ? new Date(booking.checkOut) : null;
+    const checkIn = parseDateString(booking.checkIn as string);
+    const checkOut = parseDateString(booking.checkOut as string);
 
     return (
       <Card className="hover-elevate transition-all duration-300 ease-in-out shadow-sm hover:shadow-lg" data-testid={`card-booking-${booking.id}`}>

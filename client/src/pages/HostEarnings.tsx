@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { HostDashboardLayout } from "@/components/HostDashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
+import { parseDateString } from "@/lib/utils";
 import type { Booking } from "@shared/schema";
 
 function EarningsContent() {
@@ -114,7 +115,7 @@ function EarningsContent() {
                       Property ID: {booking.propertyId?.substring(0, 8)}
                     </p>
                     <p className="text-sm text-muted-foreground" data-testid={`text-dates-${booking.id}`}>
-                      {format(new Date(booking.checkIn), 'MMM d')} - {format(new Date(booking.checkOut), 'MMM d, yyyy')}
+                      {parseDateString(booking.checkIn as string) ? format(parseDateString(booking.checkIn as string)!, 'MMM d') : 'N/A'} - {parseDateString(booking.checkOut as string) ? format(parseDateString(booking.checkOut as string)!, 'MMM d, yyyy') : 'N/A'}
                     </p>
                   </div>
                   <div className="text-right">
