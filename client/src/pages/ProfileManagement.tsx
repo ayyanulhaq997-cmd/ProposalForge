@@ -1,17 +1,19 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { Loader2, Upload, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, Upload, Check, Mail, Phone, Shield, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { UserProfile, IdVerification } from "@shared/schema";
+import type { UserProfile, IdVerification, User as UserType } from "@shared/schema";
 
 interface ProfileData {
   profile: UserProfile | null;
   verification: IdVerification | null;
+  user?: UserType | null;
 }
 
 export default function ProfileManagement() {
@@ -20,10 +22,21 @@ export default function ProfileManagement() {
   const [phone, setPhone] = useState("");
   const [emergency, setEmergency] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
 
   const { data, isLoading } = useQuery<ProfileData>({
     queryKey: ['/api/user/profile'],
   });
+
+  useEffect(() => {
+    if (data?.profile && !hasLoadedInitialData) {
+      setBio(data.profile.bio || "");
+      setPhone(data.profile.phoneNumber || "");
+      setEmergency(data.profile.emergencyContact || "");
+      setEmergencyPhone(data.profile.emergencyPhone || "");
+      setHasLoadedInitialData(true);
+    }
+  }, [data, hasLoadedInitialData]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
@@ -69,11 +82,63 @@ export default function ProfileManagement() {
     );
   }
 
-  const { profile, verification } = data || {};
+  const { profile, verification, user } = data || {};
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 data-testid="text-profile-heading" className="text-3xl font-bold mb-8">Profile Management</h1>
+
+      {/* Account Info with KYC Status */}
+      <Card data-testid="card-account-info" className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Account Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {user && (
+            <>
+              <div className="flex items-center gap-3 pb-3 border-b">
+                <div className="flex-1">
+                  <p data-testid="text-user-name" className="font-medium">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p data-testid="text-user-role" className="text-sm text-muted-foreground capitalize">
+                    {user.role}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {user.kycVerified ? (
+                    <Badge data-testid="badge-kyc-verified" className="bg-green-600">
+                      <Shield className="h-3 w-3 mr-1" />
+                      KYC Verified
+                    </Badge>
+                  ) : (
+                    <Badge data-testid="badge-kyc-pending" variant="outline">
+                      <Shield className="h-3 w-3 mr-1" />
+                      KYC Pending
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span data-testid="text-user-email">{user.email || 'No email set'}</span>
+                </div>
+                {phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span data-testid="text-user-phone">{phone}</span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Personal Info */}
       <Card data-testid="card-personal-info" className="mb-6">
@@ -83,12 +148,12 @@ export default function ProfileManagement() {
         <CardContent className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Bio</label>
-            <textarea
+            <Textarea
               data-testid="input-bio"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell us about yourself"
-              className="w-full border rounded p-2 text-sm"
+              className="resize-none"
               rows={3}
             />
           </div>

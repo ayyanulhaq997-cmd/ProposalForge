@@ -2504,9 +2504,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/user/profile', [isAuthenticated], async (req: any, res: any) => {
     try {
       const userId = (req as any).user.id;
+      const user = await storage.getUser(userId);
       const profile = await storage.getUserProfile(userId);
       const verification = await storage.getIdVerification(userId);
-      res.json({ profile, verification });
+      res.json({ 
+        user: user ? { 
+          id: user.id, 
+          email: user.email, 
+          firstName: user.firstName, 
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+          role: user.role,
+          kycVerified: user.kycVerified,
+          isVerified: user.isVerified
+        } : null,
+        profile, 
+        verification 
+      });
     } catch (error: any) {
       res.status(500).json({ message: 'Failed to fetch profile' });
     }
