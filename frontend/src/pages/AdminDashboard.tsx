@@ -178,6 +178,19 @@ function BookingsView() {
     },
   });
 
+  const approveMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      await apiRequest('PATCH', `/api/admin/bookings/${bookingId}/approve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings/recent'] });
+      toast({ title: "Success", description: "Booking approved" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   if (isLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
 
   return (
@@ -262,6 +275,15 @@ function BookingsView() {
                         <Button size="sm" variant="outline" onClick={() => { setEditingId(booking.id); setEditData({}); }} data-testid={`button-edit-${booking.id}`}>
                           <Edit2 className="h-4 w-4" />
                         </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {booking.status === 'pending' ? (
+                        <Button size="sm" onClick={() => approveMutation.mutate(booking.id)} data-testid={`button-approve-${booking.id}`}>
+                          Approve
+                        </Button>
+                      ) : (
+                        <Badge variant="default">Approved</Badge>
                       )}
                     </TableCell>
                   </TableRow>
@@ -766,10 +788,12 @@ export default function AdminDashboard() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {booking.status === 'pending' && (
-                              <Button size="sm" variant="outline">
-                                Confirm
+                            {booking.status === 'pending' ? (
+                              <Button size="sm" onClick={() => approveMutation.mutate(booking.id)} data-testid={`button-approve-${booking.id}`}>
+                                Approve
                               </Button>
+                            ) : (
+                              <Badge variant="default">Approved</Badge>
                             )}
                           </TableCell>
                         </TableRow>

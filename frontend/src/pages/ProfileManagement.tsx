@@ -199,6 +199,20 @@ export default function ProfileManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* KYC Status */}
+      <Card data-testid="card-kyc-status">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            KYC Status
+            {profile?.kycVerified ? (
+              <Badge data-testid="badge-kyc-verified" className="bg-green-600">Verified</Badge>
+            ) : (
+              <Badge data-testid="badge-kyc-pending" variant="outline">Pending</Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+      </Card>
     </div>
   );
 }

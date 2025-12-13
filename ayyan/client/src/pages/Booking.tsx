@@ -41,24 +41,24 @@ export default function Booking() {
   // Parse dates from URL params (handle timezone safely)
   const parseDate = (dateStr: string | null): Date | null => {
     if (!dateStr) return null;
-    
+
     // Parse YYYY-MM-DD format directly from ISO string
     // This ensures consistency and avoids timezone conversion
-    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const match = dateStr.match(/^\d{4}-\d{2}-\d{2}$/);
     if (!match) return null;
-    
+
     const year = parseInt(match[1], 10);
     const month = parseInt(match[2], 10);
     const day = parseInt(match[3], 10);
-    
+
     // Validate numbers are in valid ranges
     if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
       return null;
     }
-    
-    // Create date using UTC to be consistent with ISO format
-    const date = new Date(Date.UTC(year, month - 1, day));
-    
+
+    // Create date using local timezone to avoid UTC offset issues
+    const date = new Date(year, month - 1, day);
+
     return date;
   };
 
