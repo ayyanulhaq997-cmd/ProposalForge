@@ -1160,11 +1160,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Participant ID required" });
       }
 
+      // If participantId looks like an email, look up the actual user ID
+      let resolvedParticipantId = participantId;
+      if (participantId.includes('@')) {
+        const participant = await storage.getUser(participantId);
+        if (!participant) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        resolvedParticipantId = participant.id;
+      }
+
       // Check if conversation exists
       const existing = await storage.getConversationsForUser(userId);
       const conv = existing.find(c => 
-        (c.participant1Id === participantId && c.participant2Id === userId) ||
-        (c.participant1Id === userId && c.participant2Id === participantId)
+        (c.participant1Id === resolvedParticipantId && c.participant2Id === userId) ||
+        (c.participant1Id === userId && c.participant2Id === resolvedParticipantId)
       );
 
       if (conv) {
@@ -1173,7 +1183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const conversation = await storage.createConversation({
         participant1Id: userId,
-        participant2Id: participantId,
+        participant2Id: resolvedParticipantId,
       });
       res.status(201).json(conversation);
     } catch (error: any) {
