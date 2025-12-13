@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Calendar, Users, MapPin, Home, Mountain, Building2, Palmtree, Heart, Loader2, Star, Sparkles } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Users, MapPin, Home, Mountain, Building2, Palmtree, Heart, Loader2, Star, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Footer } from "@/components/Footer";
 import heroImage from "@assets/stock_images/luxury_resort_pool_v_f8b91ec8.jpg";
@@ -14,7 +17,7 @@ import type { Property } from "@shared/schema";
 
 export default function Landing() {
   const [searchLocation, setSearchLocation] = useState("");
-  const [checkIn, setCheckIn] = useState("");
+  const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
   const [guests, setGuests] = useState("");
   const [showAnimations, setShowAnimations] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -132,16 +135,33 @@ export default function Landing() {
                   </div>
                   
                   {/* Date */}
-                  <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
-                    <Calendar className="h-5 w-5 text-pink-500 flex-shrink-0" />
-                    <Input
-                      type="date"
-                      value={checkIn}
-                      onChange={(e) => setCheckIn(e.target.value)}
-                      className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-gray-900 dark:text-white"
-                      data-testid="input-check-in"
-                    />
-                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button 
+                        type="button"
+                        className="flex-1 flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 text-left"
+                        data-testid="input-check-in"
+                      >
+                        <CalendarIcon className="h-5 w-5 text-pink-500 flex-shrink-0" />
+                        <span className={checkIn ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}>
+                          {checkIn ? format(checkIn, "dd/MM/yyyy") : "Fecha"}
+                        </span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkIn}
+                        onSelect={setCheckIn}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          return date < today;
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   
                   {/* Guests */}
                   <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">

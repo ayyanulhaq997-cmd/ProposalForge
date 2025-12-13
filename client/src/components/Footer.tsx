@@ -1,5 +1,5 @@
-import { Link } from "wouter";
 import { Mail, MapPin, Phone } from "lucide-react";
+import { Link } from "wouter";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -16,26 +16,24 @@ export function Footer() {
     {
       title: "For Guests",
       links: [
-        { label: "How It Works", href: "/" },
-        { label: "Safety Tips", href: "/" },
-        { label: "Reviews", href: "/" },
+        { label: "How It Works", href: "/how-it-works" },
+        { label: "Safety Tips", href: "/safety-tips" },
       ],
     },
     {
       title: "For Hosts",
       links: [
         { label: "Become a Host", href: "/login" },
-        { label: "Host Guidelines", href: "/" },
         { label: "Host Dashboard", href: "/host" },
       ],
     },
     {
       title: "Support",
       links: [
-        { label: "Help Center", href: "/" },
-        { label: "Contact Us", href: "/" },
-        { label: "Privacy Policy", href: "/" },
-        { label: "Terms & Conditions", href: "/" },
+        { label: "Help Center", href: "/help" },
+        { label: "Contact Us", href: "/contact" },
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms & Conditions", href: "/terms" },
       ],
     },
   ];
@@ -74,12 +72,12 @@ export function Footer() {
               <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <a 
+                    <Link 
                       href={link.href}
                       className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -94,13 +92,31 @@ export function Footer() {
               © {currentYear} Curated Vacation Rentals. All rights reserved.
             </p>
             <div className="flex gap-6">
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a 
+                href="https://twitter.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                data-testid="link-social-twitter"
+              >
                 Twitter
               </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a 
+                href="https://instagram.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                data-testid="link-social-instagram"
+              >
                 Instagram
               </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a 
+                href="https://facebook.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                data-testid="link-social-facebook"
+              >
                 Facebook
               </a>
             </div>

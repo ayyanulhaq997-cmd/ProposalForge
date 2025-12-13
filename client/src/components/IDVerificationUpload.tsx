@@ -42,19 +42,42 @@ export function IDVerificationUpload() {
   const handleCaptureSelfie = async () => {
     try {
       setIsVideoReady(false);
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      setShowSelfieCapture(true);
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+      });
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.muted = true;
+        
+        const setReady = () => {
+          if (!isVideoReady) setIsVideoReady(true);
+        };
+        
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
+          videoRef.current?.play().catch(() => {});
         };
-        videoRef.current.onplaying = () => {
-          setIsVideoReady(true);
-        };
+        
+        videoRef.current.onplaying = setReady;
+        videoRef.current.oncanplay = setReady;
+        
+        // Fallback: set ready after 2 seconds if events don't fire
+        setTimeout(() => {
+          if (videoRef.current?.srcObject) {
+            setIsVideoReady(true);
+          }
+        }, 2000);
       }
-      setShowSelfieCapture(true);
-    } catch (err) {
-      toast({ title: "Error", description: "Could not access camera", variant: "destructive" });
+    } catch (err: any) {
+      setShowSelfieCapture(false);
+      const message = err?.name === 'NotAllowedError' 
+        ? "Camera access denied. Please allow camera access in your browser settings."
+        : err?.name === 'NotFoundError'
+        ? "No camera found. Please connect a camera and try again."
+        : "Could not access camera. Please check your camera permissions.";
+      toast({ title: "Camera Error", description: message, variant: "destructive" });
     }
   };
 
@@ -198,7 +221,8 @@ export function IDVerificationUpload() {
                   ref={videoRef}
                   autoPlay
                   playsInline
-                  className="w-full rounded-md border border-input"
+                  muted
+                  className="w-full rounded-md border border-input bg-muted"
                   data-testid="video-selfie"
                 />
                 <div className="flex gap-2">

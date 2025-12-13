@@ -19,6 +19,12 @@ import Login from "@/pages/Login";
 import Blog from "@/pages/Blog";
 import VerificationStatus from "@/pages/VerificationStatus";
 import VerificationRequired from "@/pages/VerificationRequired";
+import HowItWorks from "@/pages/HowItWorks";
+import SafetyTips from "@/pages/SafetyTips";
+import HelpCenter from "@/pages/HelpCenter";
+import ContactUs from "@/pages/ContactUs";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Terms from "@/pages/Terms";
 
 // Lazy load heavy admin/host pages
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
@@ -65,6 +71,14 @@ function Router() {
       <Route path="/property/:id" component={PropertyDetail} />
       <Route path="/book/:id" component={Booking} />
       <Route path="/blog" component={Blog} />
+
+      {/* Footer pages */}
+      <Route path="/how-it-works" component={HowItWorks} />
+      <Route path="/safety-tips" component={SafetyTips} />
+      <Route path="/help" component={HelpCenter} />
+      <Route path="/contact" component={ContactUs} />
+      <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/terms" component={Terms} />
 
       {/* User routes */}
       <Route path="/trips" component={Trips} />
