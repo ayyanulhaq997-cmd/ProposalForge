@@ -15,6 +15,17 @@ import { WebhookHandlers } from "./webhookHandlers";
 import { PaymentService } from "./paymentService";
 import { MediaService } from "./mediaService";
 
+// Helper function to parse date strings as local dates (not UTC)
+// This prevents the 1-day offset issue when parsing "YYYY-MM-DD" strings
+function parseLocalDate(dateStr: string): Date {
+  const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const [, year, month, day] = match;
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  return new Date(dateStr);
+}
+
 // Seed test properties (with timeout to prevent blocking)
 async function seedProperties() {
   try {
@@ -912,8 +923,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // }
 
       // Calculate pricing with seasonal and weekend pricing
-      const checkInDate = new Date(checkIn);
-      const checkOutDate = new Date(checkOut);
+      // Use parseLocalDate to avoid timezone issues (prevents 1-day offset)
+      const checkInDate = parseLocalDate(checkIn as string);
+      const checkOutDate = parseLocalDate(checkOut as string);
       const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
       const basePrice = Number(property.pricePerNight);
       const weekendMultiplier = Number(property.weekendPriceMultiplier || 1.0);
