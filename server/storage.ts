@@ -485,8 +485,20 @@ export class DatabaseStorage implements IStorage {
 
   // Property operations
   async createProperty(propertyData: InsertProperty): Promise<Property> {
-    const [property] = await db.insert(properties).values(propertyData).returning();
-    return property;
+    try {
+      // Ensure array fields are properly formatted for JSONB
+      const sanitizedData = {
+        ...propertyData,
+        amenities: Array.isArray(propertyData.amenities) ? JSON.parse(JSON.stringify(propertyData.amenities)) : [],
+        images: Array.isArray(propertyData.images) ? JSON.parse(JSON.stringify(propertyData.images)) : [],
+        videos: Array.isArray(propertyData.videos) ? JSON.parse(JSON.stringify(propertyData.videos)) : [],
+      };
+      const [property] = await db.insert(properties).values(sanitizedData as any).returning();
+      return property;
+    } catch (error) {
+      console.error('Error creating property:', error);
+      throw error;
+    }
   }
 
   async getProperty(id: string): Promise<Property | undefined> {

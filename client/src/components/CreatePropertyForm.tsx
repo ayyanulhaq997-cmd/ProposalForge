@@ -29,6 +29,9 @@ const insertPropertySchema = createInsertSchema(properties, {
   serviceFee: z.coerce.string().optional(),
   taxRate: z.coerce.string().optional(),
   weekendPriceMultiplier: z.coerce.string().optional(),
+  amenities: z.array(z.string()).default([]),
+  images: z.array(z.string()).default([]),
+  videos: z.array(z.string()).default([]),
 }).omit({ 
   id: true, 
   createdAt: true, 
