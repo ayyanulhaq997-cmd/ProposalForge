@@ -1,534 +1,271 @@
-# Complete Setup Guide - StayHub Vacation Rental Platform
+# StayHub Setup Guide for Developers
 
-## Prerequisites
+This guide will help you set up and run the StayHub application locally.
 
-Before starting, ensure you have:
-- **Node.js** 18+ and npm
-- **PostgreSQL** 12+ (or use Neon cloud database)
-- **Git** for version control
-- **Square Account** (free) for payment processing
-- **Text Editor** (VS Code recommended)
+## 📋 Prerequisites
 
----
+Ensure you have the following installed:
+- **Node.js** v18 or higher (download from https://nodejs.org)
+- **npm** (comes with Node.js)
+- **PostgreSQL** (version 12+)
+  - Download from https://www.postgresql.org/download/
+  - Or use: Windows: PostgreSQL installer, Mac: `brew install postgresql`, Linux: `sudo apt install postgresql`
 
-## Installation & Setup
+## 🗂️ Project Structure
 
-### Step 1: Clone or Download Project
+```
+frontend/          → React frontend application
+backend/           → Express.js backend API
+  ├── shared/     → Shared types and schemas
+package.json       → Root dependencies
+README.md          → Project overview
+```
+
+## 🚀 Installation & Setup
+
+### Step 1: Clone the Repository
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/stayhub.git
-cd stayhub
-
-# Or extract downloaded ZIP
-unzip stayhub.zip
+git clone <repository-url>
 cd stayhub
 ```
 
 ### Step 2: Install Dependencies
 
 ```bash
-# Install all npm packages
 npm install
-
-# This installs 80+ dependencies including:
-# - React, TypeScript, Tailwind CSS
-# - Express, PostgreSQL driver
-# - React Query, Zod, Framer Motion
-# - Square SDK and many more
 ```
 
-**Expected Output:**
-```
-added XXX packages in 2m
-```
+This installs all dependencies for both frontend and backend.
 
-### Step 3: Setup Environment Variables
+### Step 3: Set Up Database
 
-Create a `.env` file in the project root:
+#### 3a. Create PostgreSQL Database
 
 ```bash
-# Create .env file in project root
-cat > .env << 'EOF'
-DATABASE_URL=postgresql://user:password@localhost:5432/stayhub
-SESSION_SECRET=your-random-secret-key-min-32-chars
-VITE_SQUARE_APPLICATION_ID=sq_sandbox_xxxxxxxxxxxxx
-VITE_SQUARE_LOCATION_ID=sq_location_xxxxxxxxxxxxx
-SQUARE_ACCESS_TOKEN=sq_apia_xxxxxxxxxxxxx
-NODE_ENV=development
-EOF
-```
-
-### Step 4: Setup Database
-
-**Option A: Using Neon (Free Cloud Database)**
-
-1. Visit https://neon.tech (free tier available)
-2. Create new project
-3. Copy connection string to `.env` as `DATABASE_URL`
-4. Run:
-```bash
-npm run db:push
-```
-
-**Option B: Local PostgreSQL**
-
-```bash
-# Create local database (on your machine)
+# On your system's command line
 createdb stayhub
 
-# Set connection string in .env
-DATABASE_URL=postgresql://user:password@localhost:5432/stayhub
+# Or if you need to specify user/password:
+createdb -U postgres -W stayhub
+```
 
-# Create tables
+#### 3b. Configure Environment Variables
+
+1. Create `.env` file in the root directory:
+
+```bash
+cp backend/.env.example .env
+```
+
+2. Edit `.env` and add your database connection:
+
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/stayhub
+SESSION_SECRET=generate-a-random-secret-key-here
+```
+
+Example:
+```env
+DATABASE_URL=postgresql://postgres:password@localhost:5432/stayhub
+SESSION_SECRET=my_super_secret_key_12345678
+```
+
+### Step 4: Initialize Database Schema
+
+```bash
 npm run db:push
 ```
+
+This creates all necessary tables and seeds test data.
 
 ### Step 5: Start Development Server
 
 ```bash
-# Start the app with hot reload
+npm run dev
+```
+
+The application will start and be available at:
+- **Frontend**: http://localhost:5000
+- **Backend API**: http://localhost:5000/api
+
+## 👥 Test Accounts
+
+After running `npm run db:push`, the following test accounts are created:
+
+### Admin Account
+- **Email**: admin@stayhub.test
+- **Password**: admin123
+- **Role**: Administrator
+
+### Host Account  
+- **Email**: host@example.com
+- **Password**: password123
+- **Role**: Property Host
+
+### Guest Account
+- **Email**: user@example.com
+- **Password**: password123
+- **Role**: Guest/Traveler
+
+## 📝 Environment Variables
+
+### Backend (.env)
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
+| `SESSION_SECRET` | Secret key for sessions | Yes |
+| `NODE_ENV` | development/production | No (default: development) |
+| `PORT` | Server port | No (default: 5000) |
+| `STRIPE_SECRET_KEY` | Stripe API key | No |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe public key | No |
+| `SQUARE_ACCESS_TOKEN` | Square API token | No |
+
+### Frontend (frontend/.env)
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Backend API URL |
+| `VITE_ENABLE_STRIPE` | Enable Stripe payments |
+| `VITE_ENABLE_SQUARE` | Enable Square payments |
+
+## 🗄️ Database Commands
+
+```bash
+# View database studio (visual database editor)
+npm run db:studio
+
+# Generate migration from schema changes
+npm run db:generate
+
+# Apply migrations to database
+npm run db:push
+
+# Force push (careful - can cause data loss)
+npm run db:push -- --force
+
+# View database schema
+npm run db:check
+```
+
+## 🛠️ Development Commands
+
+```bash
+# Start both frontend and backend
 npm run dev
 
-# Expected output:
-# ✓ Built in Xms
-# ➜  Local:   http://localhost:5000/
-# ➜  Port:    5000
-# ➜  Network: http://192.168.x.x:5000
-```
+# Start frontend only
+npm run dev:client
 
-Visit **http://localhost:5000** in your browser!
+# Start backend only
+npm run dev:server
 
----
-
-## First Time Setup Checklist
-
-- [x] Node.js installed (`node --version` shows 18+)
-- [x] Dependencies installed (`npm install` completed)
-- [x] Database configured (PostgreSQL or Neon)
-- [x] Environment variables set
-- [x] `npm run db:push` executed successfully
-- [x] Dev server running (`npm run dev`)
-- [x] Can visit http://localhost:5000
-
----
-
-## Square Payment Integration
-
-### Get Your Square Credentials (5 minutes)
-
-1. **Create Free Square Account**
-   - Visit https://squareup.com
-   - Click "Sign Up" → "Start with Square"
-   - Complete signup (2 minutes)
-
-2. **Get Credentials from Developer Dashboard**
-   - Login to Square Dashboard
-   - Click **Developer** → **API Keys**
-   - Copy:
-     - **Application ID** (looks like `sq_apia_xxxxx`)
-     - **Location ID** (from Locations tab)
-     - **Access Token** (generate new one)
-
-3. **Test with Sandbox**
-   - Default environment is Sandbox (for testing)
-   - Test card: `4242 4242 4242 4242`
-   - Any future expiry date
-   - Any CVC (e.g., 123)
-
-4. **Enable Real Payments**
-   - When ready: Switch to Production environment
-   - Use real Square credentials
-   - Real payments accepted immediately
-
-### Add Credentials to Your App
-
-Add to `.env` file:
-```bash
-VITE_SQUARE_APPLICATION_ID=sq_apia_xxxxx
-VITE_SQUARE_LOCATION_ID=sq_location_xxxxx
-SQUARE_ACCESS_TOKEN=sq_pata_xxxxx
-```
-
-### Test the Payment Flow
-
-1. Visit http://localhost:5000
-2. Click on any property
-3. Select check-in and check-out dates
-4. Click "Proceed to Payment"
-5. Enter test card: `4242 4242 4242 4242`
-6. Any future expiry and CVC
-7. Click "Pay Now"
-8. See confirmation page
-
-See `SQUARE_SETUP.md` for detailed Square integration guide.
-
----
-
-## Available Commands
-
-```bash
-# Development
-npm run dev              # Start dev server with hot reload
-
-# Building
-npm run build            # Build for production (creates ./dist)
-npm run preview          # Preview production build locally
-
-# Database
-npm run db:push          # Sync database schema
-npm run db:studio        # Open Drizzle Studio (visual DB editor)
-
-# Type checking
-npx tsc --noEmit         # Check TypeScript errors
-
-# Clean
-npm run clean            # Remove build artifacts
-```
-
----
-
-## Project Structure
-
-```
-stayhub/
-├── client/              # Frontend React app
-│   └── src/
-│       ├── pages/       # Page components
-│       ├── components/  # Reusable components
-│       ├── lib/         # Utilities & config
-│       └── App.tsx      # Main app component
-├── server/              # Express backend
-│   ├── routes.ts        # API endpoints
-│   ├── storage.ts       # Data layer
-│   └── index.ts         # Server setup
-├── shared/              # Shared types & schemas
-│   └── schema.ts        # Database schemas
-└── package.json         # Dependencies & scripts
-```
-
-See `PROJECT_STRUCTURE.md` for detailed breakdown.
-
----
-
-## Authentication
-
-### Login as User
-
-```
-Email: user@example.com
-Password: password123
-Role: Guest
-```
-
-### Login as Admin
-
-```
-Email: admin@stayhub.test
-Password: admin123
-Role: Admin
-```
-
-### Login as Host
-
-```
-Email: host@example.com
-Password: password123
-Role: Host
-```
-
----
-
-## Database Operations
-
-### View Database (Drizzle Studio)
-
-```bash
-npm run db:studio
-# Opens visual database editor at http://localhost:5555
-# View, edit, and query tables directly
-```
-
-### Create Tables
-
-```bash
-npm run db:push
-# Reads schema from shared/schema.ts
-# Creates/updates tables in database
-```
-
-### Sync Schema Changes
-
-```bash
-# After editing shared/schema.ts, run:
-npm run db:push
-
-# Answer "Yes" to any prompts about schema changes
-```
-
----
-
-## Common Issues & Troubleshooting
-
-### Issue: "DATABASE_URL is not set"
-
-**Solution:**
-1. Check that `.env` file exists and has `DATABASE_URL`
-2. Or set secret in Replit UI (Secrets tab)
-3. Restart dev server after adding env var
-
-### Issue: "Cannot connect to database"
-
-**Solution:**
-1. Verify database connection string is correct
-2. Check PostgreSQL is running
-3. Try connection string with psql:
-```bash
-psql postgresql://user:password@localhost:5432/stayhub
-```
-
-### Issue: "Payment form not showing"
-
-**Solution:**
-1. Check that Square credentials are set in env vars
-2. Verify VITE_ prefix on frontend environment variables
-3. Check browser console for Square SDK errors
-4. Make sure `npm run dev` is running
-
-### Issue: "Port 5000 already in use"
-
-**Solution:**
-```bash
-# Kill process on port 5000
-lsof -ti:5000 | xargs kill -9
-
-# Or use different port
-PORT=3000 npm run dev
-```
-
-### Issue: "npm install fails"
-
-**Solution:**
-```bash
-# Clear npm cache
-npm cache clean --force
-
-# Delete node_modules and package-lock.json
-rm -rf node_modules package-lock.json
-
-# Install again
-npm install
-```
-
-### Issue: "TypeScript errors"
-
-**Solution:**
-```bash
-# Check all errors
-npx tsc --noEmit
-
-# Errors don't block development
-# Visit http://localhost:5000 anyway
-# Fix errors in code files
-```
-
-### Issue: "Hot reload not working"
-
-**Solution:**
-- This is expected in some environments
-- Just refresh the browser manually
-- Is not a blocking issue
-
----
-
-## Testing Locally
-
-### Test Property Browsing
-
-```
-1. Visit http://localhost:5000
-2. See 7 pre-seeded properties
-3. Click on any property
-4. View details, amenities, pricing
-```
-
-### Test Booking Flow
-
-```
-1. Click property → "Book Now"
-2. Select check-in: 2025-12-20
-3. Select check-out: 2025-12-27
-4. Click "Proceed to Payment"
-5. Enter test card details
-6. See booking confirmation
-```
-
-### Test Admin Dashboard
-
-```
-1. Login as: admin@stayhub.test / admin123
-2. Visit /admin
-3. See 7 feature tabs:
-   - Seasonal Pricing
-   - Chat Files
-   - Calendar Sync
-   - Push Notifications
-   - Room Blocking
-   - Audit Logs
-   - User Impersonation
-```
-
-### Test Chat
-
-```
-1. Login as User1
-2. Open chat with another user
-3. Send message → should appear instantly
-4. Logout and login as User2
-5. See message in conversation
-```
-
----
-
-## Deploy to Production
-
-### Build for Production
-
-```bash
+# Build for production
 npm run build
-# Creates ./dist/ folder with optimized code
-```
-
-### Deploy to Replit
-
-1. The app auto-deploys when you push code
-2. No additional setup needed
-3. Visit your Replit project URL
-
-### Deploy to Railway/Render/Vercel
-
-1. Push code to GitHub
-2. Connect your repo to hosting platform
-3. Set environment variables in platform UI:
-   - `DATABASE_URL`
-   - `SESSION_SECRET`
-   - `VITE_SQUARE_APPLICATION_ID`
-   - `VITE_SQUARE_LOCATION_ID`
-   - `SQUARE_ACCESS_TOKEN`
-4. Deploy (usually automatic)
-
-### Deploy to Traditional Server (VPS/Cloud)
-
-```bash
-# On your server:
-git clone <your-repo>
-cd stayhub
-npm install
-npm run build
-
-# Set environment variables
-export DATABASE_URL=...
-export SESSION_SECRET=...
-export SQUARE_ACCESS_TOKEN=...
 
 # Start production server
-node dist/index.js
+npm run start
 
-# Or use PM2 for process management
-npm i -g pm2
-pm2 start dist/index.js --name "stayhub"
+# Run linting
+npm run lint
+
+# Type checking
+npm run type-check
 ```
 
+## 🔍 Troubleshooting
+
+### Issue: "database does not exist"
+**Solution**: Make sure PostgreSQL is running and create the database:
+```bash
+createdb stayhub
+```
+
+### Issue: "Port 5000 already in use"
+**Solution**: Change the port in `.env`:
+```env
+PORT=3000
+```
+Then access the app at `http://localhost:3000`
+
+### Issue: "Cannot find module" errors
+**Solution**: Reinstall dependencies:
+```bash
+rm -rf node_modules
+npm install
+npm run dev
+```
+
+### Issue: Database migration fails
+**Solution**: Reset the database and retry:
+```bash
+# Drop the database
+dropdb stayhub
+
+# Recreate it
+createdb stayhub
+
+# Reapply migrations
+npm run db:push
+```
+
+### Issue: "SESSION_SECRET not set"
+**Solution**: Add SESSION_SECRET to your `.env` file:
+```env
+SESSION_SECRET=any-random-string-here
+```
+
+## 📚 Feature Overview
+
+### User Roles
+
+1. **Guest**: Browse properties, make bookings
+2. **Host**: List properties, manage bookings
+3. **Admin**: Manage users and system settings
+
+### Main Features
+
+- 🏠 Property Listing & Search
+- 📅 Booking Management
+- 💳 Payment Processing
+- 👤 User Profiles & Verification
+- 🛡️ Admin Dashboard
+- 🌐 Multi-language Support (English/Spanish)
+- 🌙 Dark Mode
+
+## 🚢 Deployment
+
+### Deploying to Replit
+
+1. Connect your GitHub repository to Replit
+2. Configure environment variables in Replit Secrets
+3. The app will auto-deploy on push
+
+### Deploying to Other Platforms
+
+Refer to the backend and frontend READMEs for deployment instructions.
+
+## 📞 Support
+
+For issues or questions:
+1. Check the troubleshooting section above
+2. Review the backend and frontend README files
+3. Check database logs: `npm run db:studio`
+
+## 🔒 Security Notes
+
+- Never commit `.env` file to version control
+- Use strong SESSION_SECRET in production
+- Keep dependencies updated: `npm audit fix`
+- Use HTTPS in production
+
+## 📖 Documentation
+
+- [Backend API Documentation](backend/README.md)
+- [Frontend Architecture](frontend/README.md)
+- [Database Schema](backend/shared/schema.ts)
+
 ---
 
-## Security Checklist
-
-Before going live:
-
-- [x] Change `SESSION_SECRET` to random 32+ character string
-- [x] Use real Square credentials (not sandbox)
-- [x] Enable HTTPS on your domain
-- [x] Set database connection to production
-- [x] Remove test data from database
-- [x] Set `NODE_ENV=production`
-- [x] Add real admin user credentials
-- [x] Configure domain DNS
-- [x] Setup monitoring/logging
-- [x] Backup database regularly
-
----
-
-## Performance Tips
-
-1. **Enable Database Connection Pooling**
-   - Replit/Neon does this automatically
-
-2. **Use CDN for Images**
-   - Add image optimization service
-   - Or compress images before upload
-
-3. **Enable Caching**
-   - React Query does this automatically
-   - Consider adding Redis
-
-4. **Monitor Performance**
-   - Use Sentry for error tracking
-   - Use LogRocket for user monitoring
-
----
-
-## Next Steps
-
-1. **Review the Code**
-   - Start with `client/src/App.tsx`
-   - Then explore `server/routes.ts`
-   - Read `shared/schema.ts` for data models
-
-2. **Customize**
-   - Change colors in `client/src/index.css`
-   - Update content in pages/components
-   - Add your properties to database
-
-3. **Deploy**
-   - Follow "Deploy to Production" section
-   - Set real domain name
-   - Monitor with logging/analytics
-
-4. **Add More Features**
-   - See `FINAL_CHECKLIST.md` for feature list
-   - Implement ones marked "READY"
-   - All infrastructure is in place
-
----
-
-## Support & Resources
-
-**Official Docs:**
-- React: https://react.dev
-- Express: https://expressjs.com
-- PostgreSQL: https://postgresql.org
-- Square: https://developer.squareup.com
-- Tailwind: https://tailwindcss.com
-
-**In Project:**
-- See `API_DOCUMENTATION.md` for endpoints
-- See `PROJECT_STRUCTURE.md` for file organization
-- See `SQUARE_SETUP.md` for payment details
-
----
-
-## Questions?
-
-Check the troubleshooting section above for common issues.
-
-Most issues are solved by:
-1. Restarting dev server (`npm run dev`)
-2. Clearing browser cache (Ctrl+Shift+Delete)
-3. Checking environment variables
-4. Reading error messages carefully
-
----
-
-**Ready to launch?** 🚀
-
-Your app is production-ready! Follow the "Deploy to Production" section to go live.
+Happy developing! 🚀
