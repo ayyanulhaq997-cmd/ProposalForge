@@ -159,51 +159,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (migrationError: any) {
     // Try to create tables from schema if migration folder doesn't exist
     try {
-      // Create users table first
+      // Create users table
       await pool.query(`
-        CREATE TABLE IF NOT EXISTS users (
-          id TEXT PRIMARY KEY,
-          email TEXT UNIQUE NOT NULL,
-          "firstName" TEXT,
-          "lastName" TEXT,
-          "passwordHash" TEXT,
-          role TEXT DEFAULT 'guest',
-          "hostVerificationStatus" TEXT DEFAULT 'pending',
-          "idVerificationStatus" TEXT DEFAULT 'pending',
-          "paymentMethodVerificationStatus" TEXT DEFAULT 'pending',
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        CREATE TABLE users (
+          id VARCHAR PRIMARY KEY,
+          email VARCHAR UNIQUE NOT NULL,
+          first_name VARCHAR,
+          last_name VARCHAR,
+          profile_image_url VARCHAR,
+          password_hash VARCHAR,
+          role VARCHAR DEFAULT 'guest',
+          is_verified BOOLEAN DEFAULT false,
+          kyc_verified BOOLEAN DEFAULT false,
+          payment_verified BOOLEAN DEFAULT false,
+          host_verification_status VARCHAR DEFAULT 'none',
+          host_verification_reason TEXT,
+          phone_number VARCHAR,
+          bio TEXT,
+          stripe_customer_id VARCHAR,
+          square_customer_id VARCHAR,
+          language VARCHAR DEFAULT 'en',
+          currency VARCHAR DEFAULT 'USD',
+          impersonated_by VARCHAR,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
       console.log('✓ Users table created');
       
-      // Add a small delay between table creations
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       // Create properties table
       await pool.query(`
-        CREATE TABLE IF NOT EXISTS properties (
-          id TEXT PRIMARY KEY,
-          "hostId" TEXT NOT NULL,
+        CREATE TABLE properties (
+          id VARCHAR PRIMARY KEY,
+          host_id VARCHAR NOT NULL,
           title TEXT NOT NULL,
           description TEXT,
           location TEXT,
-          category TEXT,
-          "propertyType" TEXT,
+          address TEXT,
+          property_type VARCHAR,
+          category VARCHAR,
+          latitude NUMERIC(10,7),
+          longitude NUMERIC(10,7),
           guests INTEGER,
-          beds INTEGER,
           bedrooms INTEGER,
+          beds INTEGER,
           bathrooms INTEGER,
-          "pricePerNight" TEXT,
-          "cleaningFee" TEXT,
-          "serviceFee" TEXT,
-          "taxRate" TEXT,
-          images TEXT[],
-          amenities TEXT[],
-          status TEXT DEFAULT 'active',
-          "isActive" BOOLEAN DEFAULT true,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          amenities JSONB DEFAULT '[]'::jsonb,
+          images JSONB DEFAULT '[]'::jsonb,
+          videos JSONB DEFAULT '[]'::jsonb,
+          price_per_night NUMERIC(10,2),
+          currency VARCHAR DEFAULT 'USD',
+          cleaning_fee NUMERIC(10,2),
+          service_fee NUMERIC(10,2),
+          tax_rate NUMERIC(5,4),
+          min_nights INTEGER DEFAULT 1,
+          max_nights INTEGER DEFAULT 30,
+          weekend_price_multiplier NUMERIC(3,2) DEFAULT 1.0,
+          status VARCHAR DEFAULT 'pending',
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
       console.log('✓ Properties table created');

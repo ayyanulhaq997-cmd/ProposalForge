@@ -502,10 +502,11 @@ export class DatabaseStorage implements IStorage {
     try {
       // Ensure array fields are properly formatted for JSONB
       const sanitizedData = {
+        id: `prop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         ...propertyData,
-        amenities: Array.isArray(propertyData.amenities) ? JSON.parse(JSON.stringify(propertyData.amenities)) : [],
-        images: Array.isArray(propertyData.images) ? JSON.parse(JSON.stringify(propertyData.images)) : [],
-        videos: Array.isArray(propertyData.videos) ? JSON.parse(JSON.stringify(propertyData.videos)) : [],
+        amenities: Array.isArray(propertyData.amenities) ? propertyData.amenities : [],
+        images: Array.isArray(propertyData.images) ? propertyData.images : [],
+        videos: Array.isArray(propertyData.videos) ? propertyData.videos : [],
       };
       const [property] = await db.insert(properties).values(sanitizedData as any).returning();
       return property;
