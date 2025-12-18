@@ -1,23 +1,56 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Bell, Lock, CreditCard, User, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Bell, Lock, CreditCard, User, Loader2, Edit2 } from "lucide-react";
 import { HostDashboardLayout } from "@/components/HostDashboardLayout";
 import { useLocation } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 function SettingsContent() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const { toast } = useToast();
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    phoneNumber: user?.phoneNumber || "",
+    bio: user?.bio || "",
+  });
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
     bookingAlerts: true,
     reviewNotifications: true,
     weeklyDigest: false,
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const res = await apiRequest("PATCH", "/api/auth/profile", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setIsEditingProfile(false);
+      refresh?.();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: userData, isLoading } = useQuery<any>({
@@ -79,30 +112,75 @@ function SettingsContent() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-muted-foreground">First Name</label>
-              <p className="font-medium" data-testid="text-firstname">{user?.firstName || 'N/A'}</p>
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground">Last Name</label>
-              <p className="font-medium" data-testid="text-lastname">{user?.lastName || 'N/A'}</p>
-            </div>
-          </div>
-          <div>
-            <label className="text-sm text-muted-foreground">Email</label>
-            <p className="font-medium" data-testid="text-email">{user?.email || 'N/A'}</p>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm text-muted-foreground">Account Status</label>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="default" data-testid="badge-host-status">Active Host</Badge>
-                {isKycVerified && <Badge variant="outline" data-testid="badge-kyc-verified">ID Verified</Badge>}
+          {!isEditingProfile ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-muted-foreground">First Name</label>
+                  <p className="font-medium" data-testid="text-firstname">{user?.firstName || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">Last Name</label>
+                  <p className="font-medium" data-testid="text-lastname">{user?.lastName || 'N/A'}</p>
+                </div>
               </div>
-            </div>
-            <Button variant="outline" size="sm" data-testid="button-edit-profile">Edit Profile</Button>
-          </div>
+              <div>
+                <label className="text-sm text-muted-foreground">Email</label>
+                <p className="font-medium" data-testid="text-email">{user?.email || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground">Phone</label>
+                <p className="font-medium" data-testid="text-phone">{user?.phoneNumber || 'Not provided'}</p>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground">Bio</label>
+                <p className="font-medium text-sm" data-testid="text-bio">{user?.bio || 'Not provided'}</p>
+              </div>
+              <div className="flex items-center justify-between pt-4">
+                <div>
+                  <label className="text-sm text-muted-foreground">Account Status</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="default" data-testid="badge-host-status">Active Host</Badge>
+                    {isKycVerified && <Badge variant="outline" data-testid="badge-kyc-verified">ID Verified</Badge>}
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setIsEditingProfile(true)} data-testid="button-edit-profile">
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-muted-foreground">First Name</label>
+                  <Input value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} data-testid="input-firstname" />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">Last Name</label>
+                  <Input value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} data-testid="input-lastname" />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground">Phone Number</label>
+                <Input value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} placeholder="+1 (555) 123-4567" data-testid="input-phone" />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground">Bio</label>
+                <Textarea value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} placeholder="Tell guests about yourself..." data-testid="input-bio" />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button onClick={() => updateProfileMutation.mutate(formData)} disabled={updateProfileMutation.isPending} data-testid="button-save-profile">
+                  {updateProfileMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Save Changes
+                </Button>
+                <Button variant="outline" onClick={() => setIsEditingProfile(false)} disabled={updateProfileMutation.isPending} data-testid="button-cancel-profile">
+                  Cancel
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

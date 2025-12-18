@@ -483,6 +483,20 @@ export class DatabaseStorage implements IStorage {
     return user as User | undefined;
   }
 
+  async updateUserProfile(id: string, data: Partial<UpsertUser>): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .update(users)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(users.id, id))
+        .returning();
+      return user as User | undefined;
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
+  }
+
   // Property operations
   async createProperty(propertyData: InsertProperty): Promise<Property> {
     try {

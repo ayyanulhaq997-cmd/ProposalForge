@@ -49,6 +49,8 @@ export const users: any = pgTable("users", {
   squareCustomerId: varchar("square_customer_id"),
   language: varchar("language", { length: 5 }).default('en'), // en, es
   currency: varchar("currency", { length: 3 }).default('USD'),
+  phoneNumber: varchar("phone_number"),
+  bio: text("bio"),
   impersonatedBy: varchar("impersonated_by").references(() => users.id), // For admin impersonation
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -503,6 +503,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile (HOST or ADMIN)
+  app.patch('/api/auth/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { firstName, lastName, phoneNumber, bio } = req.body;
+      
+      const updated = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        phoneNumber,
+        bio,
+      });
+      
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      res.status(400).json({ message: error.message || "Failed to update profile" });
+    }
+  });
+
   // ============================================================================
   // PROPERTY ROUTES
   // ============================================================================
