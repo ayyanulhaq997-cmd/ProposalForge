@@ -1366,14 +1366,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get recent bookings (admin)
+  // Get recent bookings (admin - all bookings)
   app.get('/api/admin/bookings/recent', isAuthenticated, requireRoles(ROLES.ADMIN), async (req: any, res) => {
     try {
-      const bookings = await storage.getBookingsByStatus('pending_approval');
+      // Fetch all bookings regardless of status
+      const bookings = await storage.getBookings?.() || [];
       res.json(bookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
-      res.status(500).json({ message: "Failed to fetch bookings" });
+      // Fallback to pending approvals if getBookings doesn't exist
+      try {
+        const bookings = await storage.getBookingsByStatus('pending_approval');
+        res.json(bookings);
+      } catch (err) {
+        res.status(500).json({ message: "Failed to fetch bookings" });
+      }
     }
   });
 

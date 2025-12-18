@@ -336,7 +336,7 @@ export default function Landing() {
       {/* How it Works */}
       <section className="py-12 sm:py-16 bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-12 text-center">How it works</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-12 text-center">Cómo Funciona</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
             <div className="text-center">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">

@@ -126,7 +126,7 @@ function HostsView() {
                   <TableHead>Email</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Properties</TableHead>
-                  <TableHead>Joined</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -137,7 +137,7 @@ function HostsView() {
                     <TableCell>
                       <Badge variant="outline">{host.propertyCount || 0}</Badge>
                     </TableCell>
-                    <TableCell>{new Date(host.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell><Badge variant="secondary">Host</Badge></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
