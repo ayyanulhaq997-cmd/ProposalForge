@@ -6,12 +6,20 @@
 [x] 6. Fixed admin dashboard - Removed "Joined" date column and replaced with "Status" badge
 [x] 7. Fixed admin bookings endpoint to show ALL bookings (not just pending_approval)
 [x] 8. Removed date picker calendar from hero page search bar
+[x] 9. FIXED: Host property creation/editing - Added missing category field to CreatePropertyForm
 
-## Summary of Changes:
-- Removed date/calendar picker widget from landing page hero section
-- Admin dashboard now properly displays all users and bookings
-- Calendar icon in "How it Works" section replaced with checkmark icon
-- Landing page heading updated to "Cómo Funciona"
+## Summary of Fixes:
+- Missing `category` FormField in CreatePropertyForm prevented hosts from creating properties
+- Added category dropdown selector with options: Luxury, Beachfront, Mountain, City, Countryside, Tropical
+- PropertyType and Category now appear in a 2-column grid layout for better UX
+- The category field is now properly editable by hosts during property creation and editing
+
+## How to use:
+1. Login as a host (email: host@example.com, password: password123)
+2. Navigate to "My Properties"
+3. Click "Add Property"
+4. Fill in all fields including the new Category dropdown
+5. Upload images and submit
 
 ## Ready for Next Tasks:
 - Task 1: Chat fix - needs architect review
@@ -19,6 +27,6 @@
 - Task 3: Add phone/email contact fields for host-user communication
 - Task 4: Fix camera/selfie capture functionality
 - Task 5: Fix date picker format issues
-- Task 6: Add footer pages (How It Works, Safety Tips, Reviews, Help Center, Contact Us, Privacy Policy, Terms & Conditions) with admin editing
-- Task 7: Add social media links (Twitter, Instagram, Facebook) that open respective platforms
+- Task 6: Add footer pages with admin editing
+- Task 7: Add social media links
 - Task 8: Make host dashboard settings configurable

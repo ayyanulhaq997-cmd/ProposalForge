@@ -266,24 +266,47 @@ export default function CreatePropertyForm({ onSuccess, propertyId }: CreateProp
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="propertyType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Property Type</FormLabel>
-                    <FormControl>
-                      <select {...field} className="w-full px-3 py-2 border rounded-md" data-testid="select-type">
-                        <option value="villa">Villa</option>
-                        <option value="apartment">Apartment</option>
-                        <option value="house">House</option>
-                        <option value="cabin">Cabin</option>
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="propertyType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Property Type</FormLabel>
+                      <FormControl>
+                        <select {...field} className="w-full px-3 py-2 border rounded-md" data-testid="select-type">
+                          <option value="villa">Villa</option>
+                          <option value="apartment">Apartment</option>
+                          <option value="house">House</option>
+                          <option value="cabin">Cabin</option>
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <select {...field} className="w-full px-3 py-2 border rounded-md" data-testid="select-category">
+                          <option value="luxury">Luxury</option>
+                          <option value="beachfront">Beachfront</option>
+                          <option value="mountain">Mountain</option>
+                          <option value="city">City</option>
+                          <option value="countryside">Countryside</option>
+                          <option value="tropical">Tropical</option>
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
