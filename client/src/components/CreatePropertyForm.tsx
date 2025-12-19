@@ -49,6 +49,7 @@ export default function CreatePropertyForm({ onSuccess, propertyId }: CreateProp
   const { toast } = useToast();
   const isEditing = !!propertyId;
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [mainImageIndex, setMainImageIndex] = useState<number>(0);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -159,8 +160,12 @@ export default function CreatePropertyForm({ onSuccess, propertyId }: CreateProp
 
   const createPropertyMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Include uploaded images in the property data
-      const propertyData = { ...data, images: uploadedImages };
+      // Include uploaded images and main image index in the property data
+      const propertyData = { 
+        ...data, 
+        images: uploadedImages,
+        mainImageIndex: mainImageIndex,
+      };
       if (isEditing) {
         const res = await apiRequest("PATCH", `/api/properties/${propertyId}`, propertyData);
         return res.json();
@@ -432,29 +437,50 @@ export default function CreatePropertyForm({ onSuccess, propertyId }: CreateProp
                   </div>
                 </div>
 
-                {/* Image Preview Grid */}
+                {/* Image Preview Grid with Main Photo Selection */}
                 {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-3 gap-4" data-testid="image-preview-grid">
-                    {uploadedImages.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={image}
-                          alt={`Property image ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-md"
-                          data-testid={`image-preview-${index}`}
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => removeImage(index)}
-                          data-testid={`button-remove-image-${index}`}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Click on an image to set it as the main photo (will display first)</p>
+                    <div className="grid grid-cols-3 gap-4" data-testid="image-preview-grid">
+                      {uploadedImages.map((image, index) => (
+                        <div 
+                          key={index} 
+                          className={`relative group cursor-pointer rounded-md overflow-hidden transition-all ${
+                            mainImageIndex === index ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'
+                          }`}
+                          onClick={() => setMainImageIndex(index)}
+                          data-testid={`image-card-${index}`}
                         >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
+                          <img
+                            src={image}
+                            alt={`Property image ${index + 1}`}
+                            className="w-full h-24 object-cover"
+                            data-testid={`image-preview-${index}`}
+                          />
+                          {mainImageIndex === index && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                              <span className="bg-primary text-white px-2 py-1 rounded text-xs font-semibold">MAIN</span>
+                            </div>
+                          )}
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeImage(index);
+                              if (mainImageIndex === index && uploadedImages.length > 1) {
+                                setMainImageIndex(0);
+                              }
+                            }}
+                            data-testid={`button-remove-image-${index}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
