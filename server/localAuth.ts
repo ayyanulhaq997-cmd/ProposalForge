@@ -169,6 +169,7 @@ export async function setupAuth(app: Express) {
         firstName: firstName || "",
         lastName: lastName || "",
         passwordHash: hashedPassword,
+        phoneNumber: null,
         role: "guest"
       });
       // Log user in automatically after registration
