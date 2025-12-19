@@ -195,6 +195,28 @@ export async function setupAuth(app: Express) {
     }
     res.status(401).json({ message: "Unauthorized" });
   });
+
+  // Change password endpoint
+  app.put("/api/auth/password", (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current and new password required" });
+    }
+    // TODO: Implement password change with current password verification
+    res.json({ message: "Password change not yet implemented" });
+  });
+
+  // Delete account endpoint
+  app.delete("/api/auth/account", (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    // TODO: Implement account deletion
+    res.json({ message: "Account deletion not yet implemented" });
+  });
 }
 
 export const isAuthenticated: RequestHandler = (req, res, next) => {
