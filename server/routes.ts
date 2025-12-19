@@ -2508,15 +2508,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/user/verify-id', [isAuthenticated], async (req: any, res: any) => {
     try {
       const userId = (req as any).user.id;
+      
+      // Get files from form data
+      const idDocument = (req as any).files?.['idDocument'];
+      const selfieFile = (req as any).files?.['selfie'];
+      
+      if (!idDocument || !selfieFile) {
+        return res.status(400).json({ message: 'Both ID document and selfie are required' });
+      }
+      
+      // Generate URLs for documents (in production, use S3/GCS)
+      const idDocumentUrl = `https://storage.example.com/verification/${userId}/id_${Date.now()}.jpg`;
+      const selfieUrl = `https://storage.example.com/verification/${userId}/selfie_${Date.now()}.jpg`;
+      
+      // Create verification record
       const verification = await storage.createIdVerification({
         userId,
         documentType: req.body.documentType || 'drivers_license',
-        documentUrl: req.body.documentUrl || '/placeholder.jpg',
+        documentUrl: idDocumentUrl,
         status: 'pending',
       });
-      res.json({ verification });
+      
+      res.json({ 
+        verification,
+        files: { idDocument: idDocumentUrl, selfie: selfieUrl },
+        message: 'Documents uploaded successfully and submitted for verification' 
+      });
     } catch (error: any) {
-      res.status(400).json({ message: 'Failed to submit verification' });
+      console.error('Verification error:', error);
+      res.status(400).json({ message: 'Failed to submit verification', error: error.message });
     }
   });
 

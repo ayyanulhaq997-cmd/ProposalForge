@@ -25,8 +25,21 @@ export function IDVerificationUpload() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const uploadMutation = useMutation({
-    mutationFn: async (data: { documentType: string }) => {
-      const response = await apiRequest('POST', '/api/user/verify-id', data);
+    mutationFn: async (data: { documentType: string; idFile: File; selfieFile: File }) => {
+      const formData = new FormData();
+      formData.append('documentType', data.documentType);
+      formData.append('idDocument', data.idFile);
+      formData.append('selfie', data.selfieFile);
+
+      const response = await fetch('/api/user/verify-id', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+      
       return response.json();
     },
     onSuccess: () => {
@@ -34,8 +47,8 @@ export function IDVerificationUpload() {
       setIdFile(null);
       setSelfieFile(null);
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to upload verification documents", variant: "destructive" });
+    onError: (error: any) => {
+      toast({ title: "Error", description: error?.message || "Failed to upload verification documents", variant: "destructive" });
     },
   });
 
@@ -120,7 +133,7 @@ export function IDVerificationUpload() {
       return;
     }
 
-    uploadMutation.mutate({ documentType });
+    uploadMutation.mutate({ documentType, idFile, selfieFile });
   };
 
   return (
