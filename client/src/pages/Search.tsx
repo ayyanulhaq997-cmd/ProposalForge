@@ -27,6 +27,17 @@ export default function Search() {
     guests: searchParams.get('guests') || '',
   });
 
+  const handleResetFilters = () => {
+    setFilters({
+      location: '',
+      category: '',
+      propertyType: '',
+      minPrice: '',
+      maxPrice: '',
+      guests: '',
+    });
+  };
+
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ['/api/properties/search', filters],
     queryFn: async () => {
@@ -117,9 +128,14 @@ export default function Search() {
               </Select>
             </div>
 
-            <Button variant="outline" className="hover-elevate active-elevate-2" data-testid="button-more-filters">
+            <Button 
+              variant="outline" 
+              className="hover-elevate active-elevate-2" 
+              onClick={handleResetFilters}
+              data-testid="button-reset-filters"
+            >
               <SlidersHorizontal className="h-4 w-4 mr-2" />
-              More Filters
+              Reset Filters
             </Button>
           </div>
 

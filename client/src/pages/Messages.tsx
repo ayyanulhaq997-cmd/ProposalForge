@@ -71,7 +71,7 @@ export default function Messages() {
   const startSupportConversationMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('POST', '/api/conversations', {
-        participantId: 'admin@stayhub.test',
+        participantId: 'admin-seed-user',
       });
       return response.json();
     },
