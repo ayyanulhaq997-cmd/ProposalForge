@@ -197,7 +197,7 @@ export async function setupAuth(app: Express) {
   });
 
   // Change password endpoint
-  app.put("/api/auth/password", (req: any, res) => {
+  app.put("/api/auth/password", async (req: any, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -205,17 +205,65 @@ export async function setupAuth(app: Express) {
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: "Current and new password required" });
     }
-    // TODO: Implement password change with current password verification
-    res.json({ message: "Password change not yet implemented" });
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user || !user.passwordHash) {
+        return res.status(400).json({ message: "User not found or password not set" });
+      }
+      
+      // Verify current password
+      const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      
+      // Hash new password and update
+      const newHash = await bcrypt.hash(newPassword, 10);
+      const updated = await storage.upsertUser({
+        id: req.user.id,
+        passwordHash: newHash
+      });
+      
+      res.json({ message: "Password changed successfully", user: updated });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to change password" });
+    }
   });
 
   // Delete account endpoint
-  app.delete("/api/auth/account", (req: any, res) => {
+  app.delete("/api/auth/account", async (req: any, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    // TODO: Implement account deletion
-    res.json({ message: "Account deletion not yet implemented" });
+    try {
+      const userId = req.user.id;
+      const { password } = req.body;
+      
+      if (!password) {
+        return res.status(400).json({ message: "Password required to delete account" });
+      }
+      
+      // Verify password
+      const user = await storage.getUser(userId);
+      if (!user || !user.passwordHash) {
+        return res.status(400).json({ message: "User not found" });
+      }
+      
+      const isValid = await bcrypt.compare(password, user.passwordHash);
+      if (!isValid) {
+        return res.status(400).json({ message: "Password is incorrect" });
+      }
+      
+      // Delete user
+      await storage.deleteUser(userId);
+      
+      // Logout user
+      req.logout(() => {
+        res.json({ message: "Account deleted successfully" });
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to delete account" });
+    }
   });
 }
 
