@@ -29,7 +29,8 @@ export default function Messages() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [location, navigate] = useLocation();
-  const params = new URLSearchParams(location.split('?')[1] || '');
+  // Use window.location.search to get the full query string including ? and parameters
+  const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const conversationId = params.get('conversationId');
   
   const [messageText, setMessageText] = useState("");
