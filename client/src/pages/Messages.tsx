@@ -44,26 +44,44 @@ export default function Messages() {
   });
 
   // Fetch messages for selected conversation
-  const { data: messages } = useQuery<Message[]>({
+  const { data: messages, isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: conversationId ? [`/api/conversations/${conversationId}/messages`] : [],
     enabled: !!conversationId,
   });
 
+  // Debug: Log when messages are fetched
+  useEffect(() => {
+    console.log('Messages updated:', { conversationId, messageCount: messages?.length, messages });
+  }, [messages, conversationId]);
+
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
+      if (!conversationId) {
+        throw new Error("No conversation selected");
+      }
       const response = await apiRequest('POST', '/api/messages', {
         conversationId,
         content,
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
       return response.json();
     },
     onSuccess: () => {
       setMessageText("");
       queryClient.invalidateQueries({ queryKey: conversationId ? [`/api/conversations/${conversationId}/messages`] : [] });
+      toast({ title: "Success", description: "Message sent" });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: "Failed to send message", variant: "destructive" });
+      console.error('Message send error:', error);
+      toast({ 
+        title: "Failed to send message", 
+        description: error.message || "Unknown error", 
+        variant: "destructive" 
+      });
     },
   });
 
@@ -76,8 +94,10 @@ export default function Messages() {
       return response.json();
     },
     onSuccess: (data: any) => {
+      console.log('Conversation created:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
       navigate(`/messages?conversationId=${data.id}`);
+      toast({ title: "Connected", description: "Support conversation started" });
     },
     onError: (error: any) => {
       console.error('Support conversation error:', error);

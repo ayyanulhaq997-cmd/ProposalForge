@@ -1268,17 +1268,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.id;
       const { conversationId, content, attachments } = req.body;
 
+      console.log(`[MESSAGE] Sending message from ${userId}:`, { conversationId, contentLength: content?.length });
+
       if (!conversationId || !content) {
         return res.status(400).json({ message: "Conversation ID and content required" });
       }
 
       const conversation = await storage.getConversation(conversationId);
       if (!conversation) {
+        console.error(`[MESSAGE] Conversation not found: ${conversationId}`);
         return res.status(404).json({ message: "Conversation not found" });
       }
 
       // Check if user is participant
       if (conversation.participant1Id !== userId && conversation.participant2Id !== userId) {
+        console.error(`[MESSAGE] User ${userId} not in conversation. Participants: ${conversation.participant1Id}, ${conversation.participant2Id}`);
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -1289,6 +1293,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attachments: attachments || [],
         isRead: false,
       });
+
+      console.log(`[MESSAGE] Message created: ${message.id}`);
 
       // Log chat message
       await storage.createAuditLog({
