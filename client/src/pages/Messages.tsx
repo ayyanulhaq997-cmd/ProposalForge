@@ -71,7 +71,7 @@ export default function Messages() {
   const startSupportConversationMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('POST', '/api/conversations', {
-        participantId: 'admin-seed-user',
+        participantId: 'admin@stayhub.test',
       });
       return response.json();
     },
@@ -80,7 +80,8 @@ export default function Messages() {
       navigate(`/messages?conversationId=${data.id}`);
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: "Failed to start support conversation", variant: "destructive" });
+      console.error('Support conversation error:', error);
+      toast({ title: "Error", description: error.message || "Failed to start support conversation", variant: "destructive" });
     },
   });
 

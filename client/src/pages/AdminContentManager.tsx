@@ -113,6 +113,18 @@ export default function AdminContentManager() {
                     placeholder="https://example.com/logo.png"
                     data-testid="input-logo-url"
                   />
+                  {formData?.logoUrl && (
+                    <div className="mt-3 p-3 border rounded-lg bg-muted/30 flex items-center justify-center min-h-[80px]">
+                      <img 
+                        src={formData.logoUrl} 
+                        alt="Logo preview" 
+                        className="max-h-16 object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="primaryColor">Primary Color</Label>
@@ -151,6 +163,18 @@ export default function AdminContentManager() {
                     placeholder="https://example.com/hero.jpg"
                     data-testid="input-hero-image"
                   />
+                  {formData?.heroImage && (
+                    <div className="mt-3 p-3 border rounded-lg bg-muted/30">
+                      <img 
+                        src={formData.heroImage} 
+                        alt="Hero preview" 
+                        className="w-full h-auto max-h-48 object-cover rounded"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="heroTitle">Hero Title</Label>
@@ -215,13 +239,17 @@ export default function AdminContentManager() {
                 </div>
                 <div>
                   <Label htmlFor="contactPhone">Contact Phone</Label>
-                  <Input
-                    id="contactPhone"
-                    value={formData?.contactPhone || ''}
-                    onChange={(e) => handleChange('contactPhone', e.target.value)}
-                    placeholder="+1 (555) 000-0000"
-                    data-testid="input-contact-phone"
-                  />
+                  <div className="flex">
+                    <span className="flex items-center px-3 border border-r-0 rounded-l-lg bg-muted text-muted-foreground">+</span>
+                    <Input
+                      id="contactPhone"
+                      value={formData?.contactPhone?.replace(/^\+/, '') || ''}
+                      onChange={(e) => handleChange('contactPhone', '+' + e.target.value.replace(/^\+/, ''))}
+                      placeholder="1 (555) 000-0000"
+                      className="rounded-l-none"
+                      data-testid="input-contact-phone"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -233,15 +261,19 @@ export default function AdminContentManager() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="currency">Currency</Label>
-                  <Input
-                    id="currency"
-                    value={formData?.currency || 'USD'}
-                    onChange={(e) => handleChange('currency', e.target.value)}
-                    placeholder="USD"
-                    maxLength={3}
-                    data-testid="input-currency"
-                  />
+                  <Label htmlFor="currency">Currency Code</Label>
+                  <div className="flex">
+                    <span className="flex items-center px-3 border border-r-0 rounded-l-lg bg-muted text-muted-foreground">$</span>
+                    <Input
+                      id="currency"
+                      value={formData?.currency || 'USD'}
+                      onChange={(e) => handleChange('currency', e.target.value.toUpperCase())}
+                      placeholder="USD"
+                      maxLength={3}
+                      className="rounded-l-none"
+                      data-testid="input-currency"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="taxRate">Tax Rate (%)</Label>
