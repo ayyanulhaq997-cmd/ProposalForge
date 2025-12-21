@@ -69,12 +69,67 @@ function SettingsContent() {
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: typeof passwordData) => {
+      const res = await apiRequest("POST", "/api/auth/change-password", {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Password changed successfully",
+      });
+      setIsChangingPassword(false);
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to change password",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleChangePassword = () => {
-    toast({
-      title: "Feature coming soon",
-      description: "Password change feature will be available soon.",
-    });
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Please fill in all password fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    changePasswordMutation.mutate(passwordData);
   };
 
   const handleSetupPayment = () => {
@@ -280,15 +335,67 @@ function SettingsContent() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
-            <div>
-              <p className="font-medium">Change Password</p>
-              <p className="text-sm text-muted-foreground">Update your password regularly</p>
+          {!isChangingPassword ? (
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+              <div>
+                <p className="font-medium">Change Password</p>
+                <p className="text-sm text-muted-foreground">Update your password regularly</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setIsChangingPassword(true)} data-testid="button-change-password">
+                Change
+              </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={handleChangePassword} data-testid="button-change-password">
-              Change
-            </Button>
-          </div>
+          ) : (
+            <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
+              <div>
+                <p className="font-medium mb-4">Change Your Password</p>
+              </div>
+              <Input
+                type="password"
+                placeholder="Current password"
+                value={passwordData.currentPassword}
+                onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                data-testid="input-current-password"
+              />
+              <Input
+                type="password"
+                placeholder="New password"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                data-testid="input-new-password"
+              />
+              <Input
+                type="password"
+                placeholder="Confirm new password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                data-testid="input-confirm-password"
+              />
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={handleChangePassword}
+                  disabled={changePasswordMutation.isPending}
+                  data-testid="button-confirm-password-change"
+                >
+                  {changePasswordMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Update Password
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsChangingPassword(false);
+                    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                  }}
+                  disabled={changePasswordMutation.isPending}
+                  data-testid="button-cancel-password-change"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
             <div>

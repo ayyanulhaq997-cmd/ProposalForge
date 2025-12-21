@@ -538,6 +538,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Change user password
+  app.post('/api/auth/change-password', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current and new passwords are required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash || "");
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await storage.updateUserProfile(userId, {
+        passwordHash: hashedPassword,
+      });
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error: any) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: error.message || "Failed to change password" });
+    }
+  });
+
   // Delete user account
   app.delete('/api/auth/account', isAuthenticated, async (req: any, res) => {
     try {
