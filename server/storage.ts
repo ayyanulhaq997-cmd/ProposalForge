@@ -263,6 +263,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   getUsersByRole(role: string): Promise<User[]>;
   updateUserRole(id: string, role: string): Promise<User | undefined>;
+  deleteUser(id: string): Promise<void>;
 
   // Property operations
   createProperty(property: InsertProperty): Promise<Property>;
@@ -481,6 +482,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user as User | undefined;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    try {
+      await db.delete(users).where(eq(users.id, id));
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
   }
 
   async updateUserProfile(id: string, data: Partial<UpsertUser>): Promise<User | undefined> {

@@ -538,6 +538,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete user account
+  app.delete('/api/auth/account', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { password } = req.body;
+
+      if (!password) {
+        return res.status(400).json({ message: "Password is required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash || "");
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid password" });
+      }
+
+      await storage.deleteUser(userId);
+      res.clearCookie('sessionId');
+      res.json({ message: "Account deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      res.status(500).json({ message: error.message || "Failed to delete account" });
+    }
+  });
+
   // ============================================================================
   // PROPERTY ROUTES
   // ============================================================================

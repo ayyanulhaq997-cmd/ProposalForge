@@ -14,7 +14,7 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 function SettingsContent() {
-  const { user, refresh } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [formData, setFormData] = useState({
@@ -42,7 +42,6 @@ function SettingsContent() {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setIsEditingProfile(false);
-      refresh?.();
     },
     onError: (error: any) => {
       toast({
@@ -68,6 +67,9 @@ function SettingsContent() {
     });
   };
 
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+
   const handleChangePassword = () => {
     toast({
       title: "Feature coming soon",
@@ -77,9 +79,10 @@ function SettingsContent() {
 
   const handleSetupPayment = () => {
     toast({
-      title: "Feature coming soon",
-      description: "Stripe Connect integration for hosts is coming soon.",
+      title: "Redirecting",
+      description: "Opening Stripe Connect setup...",
     });
+    window.open('https://connect.stripe.com/express/login', '_blank');
   };
 
   const handleDisconnectPayment = () => {
@@ -87,6 +90,40 @@ function SettingsContent() {
       title: "Payment method disconnected",
       description: "Your payment method has been safely removed.",
     });
+  };
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async (password: string) => {
+      const res = await apiRequest("DELETE", "/api/auth/account", { password });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Your account has been deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setTimeout(() => window.location.href = '/login', 2000);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete account",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      toast({
+        title: "Error",
+        description: "Please enter your password",
+        variant: "destructive",
+      });
+      return;
+    }
+    deleteAccountMutation.mutate(deletePassword);
   };
 
   if (isLoading) {
@@ -333,20 +370,63 @@ function SettingsContent() {
           <CardTitle className="text-destructive">Danger Zone</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-4 border border-destructive/30 rounded-lg bg-destructive/5">
-            <p className="font-medium text-destructive mb-2">Deactivate Account</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Temporarily suspend your host account. You can reactivate it later.
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-destructive border-destructive hover:bg-destructive/5"
-              data-testid="button-deactivate"
-            >
-              Deactivate Account
-            </Button>
-          </div>
+          {!isDeleting ? (
+            <div className="p-4 border border-destructive/30 rounded-lg bg-destructive/5">
+              <p className="font-medium text-destructive mb-2">Delete Account Permanently</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Permanently delete your account and all associated data. This action cannot be undone.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-destructive border-destructive hover:bg-destructive/5"
+                onClick={() => setIsDeleting(true)}
+                data-testid="button-delete-account"
+              >
+                Delete Account
+              </Button>
+            </div>
+          ) : (
+            <div className="p-4 border border-destructive/30 rounded-lg bg-destructive/5 space-y-4">
+              <div>
+                <p className="font-medium text-destructive mb-2">Confirm Account Deletion</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Enter your password to confirm deletion. This cannot be undone.
+                </p>
+              </div>
+              <Input
+                type="password"
+                placeholder="Enter your password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                data-testid="input-delete-password"
+              />
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteAccount}
+                  disabled={deleteAccountMutation.isPending}
+                  data-testid="button-confirm-delete"
+                >
+                  {deleteAccountMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Delete Permanently
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsDeleting(false);
+                    setDeletePassword("");
+                  }}
+                  disabled={deleteAccountMutation.isPending}
+                  data-testid="button-cancel-delete"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
