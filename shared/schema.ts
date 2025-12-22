@@ -52,6 +52,9 @@ export const users: any = pgTable("users", {
   phoneNumber: varchar("phone_number"),
   bio: text("bio"),
   impersonatedBy: varchar("impersonated_by").references(() => users.id), // For admin impersonation
+  lastLoginAt: timestamp("last_login_at"), // Login history
+  twoFactorEnabled: boolean("two_factor_enabled").default(false), // 2FA status
+  twoFactorSecret: varchar("two_factor_secret"), // OTP secret for 2FA
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

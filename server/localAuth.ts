@@ -83,6 +83,14 @@ export async function setupAuth(app: Express) {
           if (!isValid) {
             return done(null, false, { message: "Invalid password" });
           }
+          
+          // Track login time
+          try {
+            await storage.updateUserProfile(user.id, { lastLoginAt: new Date() });
+          } catch (e) {
+            // Silently fail if update doesn't work - don't break authentication
+          }
+          
           return done(null, user);
         } catch (error) {
           console.error('Passport strategy error:', error);

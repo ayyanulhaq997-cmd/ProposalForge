@@ -570,6 +570,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get login history
+  app.get('/api/auth/login-history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({
+        lastLoginAt: user.lastLoginAt,
+        currentLoginTime: new Date(),
+      });
+    } catch (error: any) {
+      console.error("Error fetching login history:", error);
+      res.status(500).json({ message: "Failed to fetch login history" });
+    }
+  });
+
+  // Enable 2FA
+  app.post('/api/auth/2fa/enable', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { password } = req.body;
+
+      if (!password) {
+        return res.status(400).json({ message: "Password is required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash || "");
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid password" });
+      }
+
+      const secret = Math.random().toString(36).substring(2, 15);
+      await storage.updateUserProfile(userId, {
+        twoFactorEnabled: true,
+        twoFactorSecret: secret,
+      });
+
+      res.json({
+        message: "2FA enabled successfully",
+        secret: secret,
+        backupCodes: [
+          Math.random().toString(36).substring(2, 10),
+          Math.random().toString(36).substring(2, 10),
+          Math.random().toString(36).substring(2, 10),
+        ],
+      });
+    } catch (error: any) {
+      console.error("Error enabling 2FA:", error);
+      res.status(500).json({ message: error.message || "Failed to enable 2FA" });
+    }
+  });
+
+  // Disable 2FA
+  app.post('/api/auth/2fa/disable', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { password } = req.body;
+
+      if (!password) {
+        return res.status(400).json({ message: "Password is required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash || "");
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid password" });
+      }
+
+      await storage.updateUserProfile(userId, {
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+      });
+
+      res.json({ message: "2FA disabled successfully" });
+    } catch (error: any) {
+      console.error("Error disabling 2FA:", error);
+      res.status(500).json({ message: error.message || "Failed to disable 2FA" });
+    }
+  });
+
   // Delete user account
   app.delete('/api/auth/account', isAuthenticated, async (req: any, res) => {
     try {

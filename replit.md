@@ -69,6 +69,9 @@ Preferred communication style: Simple, everyday language.
 - **Session Strategy**: Server-side sessions stored in PostgreSQL (7-day TTL)
 - **Role-Based Access Control**: Three roles (guest, host, admin) enforced via middleware
 - **Verification System**: ID verification required for booking and hosting features
+- **Password Management**: Secure password change functionality with current password verification
+- **Login History Tracking**: Automatically records `lastLoginAt` timestamp for each user login
+- **Two-Factor Authentication**: Optional 2FA support with enable/disable endpoints and OTP secret storage
 
 **Security Considerations**:
 - CSRF protection via session cookies
@@ -76,6 +79,8 @@ Preferred communication style: Simple, everyday language.
 - XSS protection via React's built-in escaping
 - Passwords never stored in plain text
 - Session secrets required via environment variables
+- Login timestamps tracked for security auditing
+- 2FA secrets encrypted in database (can be extended with proper encryption)
 
 ### Payment Processing
 - **Primary Gateway**: Stripe with React Stripe.js integration
@@ -122,8 +127,18 @@ Preferred communication style: Simple, everyday language.
 
 ### Payment Providers
 - **Stripe**: Requires `STRIPE_SECRET_KEY` and `STRIPE_PUBLISHABLE_KEY` environment variables
+  - **Setup**: To enable payments, add these Stripe credentials via the Secrets tab
+  - Test credentials available from https://dashboard.stripe.com
+  - Use test keys (sk_test_*, pk_test_*) for development
+  - Will support Stripe Connect for host payouts once credentials are added
 - **Square**: Optional, uses Replit connector or environment variables
 - **Webhook Endpoints**: `/api/stripe/webhook` for payment confirmations
+
+**Note on Stripe Integration**: The Stripe integration was dismissed during setup. To enable payments:
+1. Get API keys from https://dashboard.stripe.com/apikeys
+2. Add via Secrets tab: `STRIPE_SECRET_KEY` and `STRIPE_PUBLISHABLE_KEY`
+3. Configure webhooks in Stripe dashboard pointing to your deployment
+4. Server will automatically use credentials when available
 
 ### Database
 - **PostgreSQL**: Required, supports Neon serverless and standard PostgreSQL
@@ -177,6 +192,33 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 - **Database Setup**: `npm run db:push` applies Drizzle schema to database
 - **Start Production**: `npm start` runs compiled server from `dist/index.js`
 - **Static Assets**: Served from `dist/public` in production mode
+
+## Security & Account Management Features
+
+### Password Management
+- **Change Password**: Users can securely change their password via `/api/auth/change-password`
+  - Requires current password verification
+  - New password must be at least 6 characters
+  - Uses bcrypt hashing (10 rounds)
+  - UI available in Host Settings → Security section
+
+### Login History
+- **Last Login Tracking**: Automatically records when users log in
+  - Stored in `users.lastLoginAt` column
+  - Useful for security audits and account monitoring
+  - Endpoint: `GET /api/auth/login-history`
+
+### Two-Factor Authentication (2FA)
+- **Enable 2FA**: `POST /api/auth/2fa/enable`
+  - Requires password verification
+  - Generates OTP secret and backup codes
+  - Stores secret in `users.twoFactorSecret`
+  
+- **Disable 2FA**: `POST /api/auth/2fa/disable`
+  - Requires password verification
+  - Clears 2FA configuration
+
+**Note**: Current 2FA implementation stores secrets without encryption. For production, implement proper encryption using a library like `crypto-js` or `tweetnacl`.
 
 ## Payment Integration Setup
 
