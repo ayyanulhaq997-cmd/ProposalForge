@@ -75,6 +75,13 @@ function SettingsContent() {
     newPassword: "",
     confirmPassword: "",
   });
+  const [isEnabling2FA, setIsEnabling2FA] = useState(false);
+  const [twoFAPassword, setTwoFAPassword] = useState("");
+  const [showLoginHistory, setShowLoginHistory] = useState(false);
+
+  const { data: loginHistory } = useQuery<any>({
+    queryKey: ['/api/auth/login-history'],
+  });
 
   const changePasswordMutation = useMutation({
     mutationFn: async (data: typeof passwordData) => {
@@ -96,6 +103,29 @@ function SettingsContent() {
       toast({
         title: "Error",
         description: error.message || "Failed to change password",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const enable2FAMutation = useMutation({
+    mutationFn: async (password: string) => {
+      const res = await apiRequest("POST", "/api/auth/2fa/enable", { password });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: "2FA enabled successfully. Save your backup codes in a safe place.",
+      });
+      setIsEnabling2FA(false);
+      setTwoFAPassword("");
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to enable 2FA",
         variant: "destructive",
       });
     },
@@ -397,21 +427,96 @@ function SettingsContent() {
             </div>
           )}
 
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
-            <div>
-              <p className="font-medium">Two-Factor Authentication</p>
-              <p className="text-sm text-muted-foreground">Add extra security to your account</p>
+          {!isEnabling2FA ? (
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+              <div>
+                <p className="font-medium">Two-Factor Authentication</p>
+                <p className="text-sm text-muted-foreground">Add extra security to your account</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setIsEnabling2FA(true)} data-testid="button-enable-2fa">
+                Enable
+              </Button>
             </div>
-            <Badge variant="secondary">Coming Soon</Badge>
-          </div>
+          ) : (
+            <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
+              <div>
+                <p className="font-medium mb-4">Enable Two-Factor Authentication</p>
+                <p className="text-sm text-muted-foreground mb-4">Enter your password to enable 2FA</p>
+              </div>
+              <Input
+                type="password"
+                placeholder="Enter your password"
+                value={twoFAPassword}
+                onChange={(e) => setTwoFAPassword(e.target.value)}
+                data-testid="input-2fa-password"
+              />
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => enable2FAMutation.mutate(twoFAPassword)}
+                  disabled={enable2FAMutation.isPending || !twoFAPassword}
+                  data-testid="button-confirm-2fa"
+                >
+                  {enable2FAMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Enable 2FA
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsEnabling2FA(false);
+                    setTwoFAPassword("");
+                  }}
+                  disabled={enable2FAMutation.isPending}
+                  data-testid="button-cancel-2fa"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
 
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
-            <div>
-              <p className="font-medium">Login History</p>
-              <p className="text-sm text-muted-foreground">View recent login activity</p>
+          {!showLoginHistory ? (
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+              <div>
+                <p className="font-medium">Login History</p>
+                <p className="text-sm text-muted-foreground">View recent login activity</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowLoginHistory(true)} data-testid="button-view-login-history">View</Button>
             </div>
-            <Button variant="outline" size="sm" disabled>View</Button>
-          </div>
+          ) : (
+            <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
+              <div>
+                <p className="font-medium mb-4">Login History</p>
+              </div>
+              {loginHistory ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-background rounded border">
+                    <p className="text-sm font-medium">Last Login</p>
+                    <p className="text-sm text-muted-foreground">
+                      {loginHistory.lastLoginAt ? new Date(loginHistory.lastLoginAt).toLocaleString() : "No previous logins"}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-background rounded border">
+                    <p className="text-sm font-medium">Current Session</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(loginHistory.currentLoginTime).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Loading login history...</p>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLoginHistory(false)}
+                data-testid="button-close-login-history"
+              >
+                Close
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

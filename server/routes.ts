@@ -268,9 +268,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // Now apply JSON middleware for all other routes
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
+  // Now apply JSON middleware for all other routes (with increased size limits for file uploads)
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
   // Auth middleware
   await setupAuth(app);
