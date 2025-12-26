@@ -7,6 +7,7 @@
 [x] 7. Fixed admin bookings endpoint to show ALL bookings (not just pending_approval)
 [x] 8. Removed date picker calendar from hero page search bar
 [x] 9. FIXED: Host property creation/editing - Added missing category field to CreatePropertyForm
+[x] 10. Migration completed - npm packages reinstalled and workflow running
 
 ## Summary of Fixes:
 - Missing `category` FormField in CreatePropertyForm prevented hosts from creating properties
