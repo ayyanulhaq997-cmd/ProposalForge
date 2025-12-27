@@ -8,19 +8,22 @@
 [x] 8. Removed date picker calendar from hero page search bar
 [x] 9. FIXED: Host property creation/editing - Added missing category field to CreatePropertyForm
 [x] 10. Migration completed - npm packages reinstalled and workflow running
+[x] 11. FIXED: Property creation 400 error - Updated backend insertPropertySchema to include coercion for numeric fields
 
-## Summary of Fixes:
-- Missing `category` FormField in CreatePropertyForm prevented hosts from creating properties
-- Added category dropdown selector with options: Luxury, Beachfront, Mountain, City, Countryside, Tropical
-- PropertyType and Category now appear in a 2-column grid layout for better UX
-- The category field is now properly editable by hosts during property creation and editing
+## Latest Fix (Turn 11):
+**Problem:** Hosts getting 400 Bad Request error when creating properties
+**Root Cause:** Frontend form was using schema with number coercion (z.coerce.number()), but backend schema didn't have matching coercion
+**Solution:** Updated `shared/schema.ts` - the `insertPropertySchema` now includes:
+- `z.coerce.number().int()` for numeric fields (guests, beds, bedrooms, bathrooms, minNights, maxNights)
+- `z.coerce.string()` for decimal fields (pricePerNight, cleaningFee, serviceFee, taxRate, weekendPriceMultiplier)
+- Array defaults for amenities, images, videos
 
-## How to use:
-1. Login as a host (email: host@example.com, password: password123)
+## How to Test:
+1. Login as host@example.com (password: password123)
 2. Navigate to "My Properties"
 3. Click "Add Property"
-4. Fill in all fields including the new Category dropdown
-5. Upload images and submit
+4. Fill in all fields and submit
+5. Property should now create successfully
 
 ## Ready for Next Tasks:
 - Task 1: Chat fix - needs architect review

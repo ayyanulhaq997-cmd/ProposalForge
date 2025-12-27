@@ -823,7 +823,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(property);
     } catch (error: any) {
       console.error("Error creating property:", error);
-      res.status(400).json({ message: error.message || "Failed to create property" });
+      console.error("Request body:", req.body);
+      // Check if it's a validation error
+      if (error.errors) {
+        const validationErrors = error.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join('; ');
+        res.status(400).json({ message: `Validation error: ${validationErrors}` });
+      } else {
+        res.status(400).json({ message: error.message || "Failed to create property" });
+      }
     }
   });
 

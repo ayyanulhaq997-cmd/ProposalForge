@@ -98,7 +98,22 @@ export const properties = pgTable("properties", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertPropertySchema = createInsertSchema(properties).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPropertySchema = createInsertSchema(properties, {
+  guests: z.coerce.number().int().min(1),
+  bedrooms: z.coerce.number().int().min(0),
+  beds: z.coerce.number().int().min(1),
+  bathrooms: z.coerce.number().int().min(1),
+  minNights: z.coerce.number().int().min(1),
+  maxNights: z.coerce.number().int().min(1),
+  pricePerNight: z.coerce.string().min(1, "Price is required"),
+  cleaningFee: z.coerce.string().optional(),
+  serviceFee: z.coerce.string().optional(),
+  taxRate: z.coerce.string().optional(),
+  weekendPriceMultiplier: z.coerce.string().optional(),
+  amenities: z.array(z.string()).default([]),
+  images: z.array(z.string()).default([]),
+  videos: z.array(z.string()).default([]),
+}).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
 export type Property = typeof properties.$inferSelect;
 
